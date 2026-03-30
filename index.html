@@ -142,7 +142,14 @@
       header { background: #1e3a5f !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
       .charts-grid { grid-template-columns: 1fr 1fr; }
-      .chart-wrap { height: 280px; }
+      .chart-wrap { height: 280px; position: static; }
+
+      /* Drag-Handles und Container-Positionierung komplett aufheben,
+         damit nichts den Canvas beim Drucken verschiebt.            */
+      .plot-container { position: static; }
+      .drag-handle { display: none !important; }
+      .drag-hint { display: none !important; }
+
       /* Hoffmann-Plot bekommt nach sich einen Seitenumbruch:
          Seite 1 = Header + Hoffmann-Plot
          Seite 2 = Kennzahlen + Histogramm               */
@@ -150,8 +157,13 @@
         page-break-after: always;
         break-after: page;
       }
-      .chart-wrap-tall { height: 560px; }
-      .drag-handle { display: none; }
+      .chart-wrap-tall { height: 560px; position: static; }
+
+      /* Canvas-Elemente sauber im Fluss halten */
+      canvas {
+        max-width: 100% !important;
+        height: auto !important;
+      }
     }
     @media (max-width: 700px) {
       .form-grid, .results-grid, .charts-grid { grid-template-columns: 1fr; }
@@ -695,20 +707,19 @@ function drawHistogram() {
   const raw = res.sortedRaw;
   const n   = raw.length;
 
-  // Darstellungsbereich: 2. bis 98. Perzentile der tatsächlichen Daten.
-  // Dieser datenbasierte Ansatz funktioniert unabhängig davon ob σ klein
-  // oder groß ist — und verhindert, dass ein langer rechter Schwanz
-  // (typisch bei log-normalverteilten Analyten) den Chart dominiert.
-  // Die Referenzgrenzen sind immer im Bild; 5 % Rand auf jeder Seite.
+  // Darstellungsbereich:
+  //  1. Basis: 2. bis 98. Perzentile der tatsächlichen Daten
+  //  2. Erweitert: beide Referenzgrenzen + 10 % Rand müssen IMMER sichtbar sein
+  //  3. Nicht unter 0 (positive Analyte)
   const pLo = raw[Math.max(0,     Math.floor(0.02 * n))];
   const pHi = raw[Math.min(n - 1, Math.ceil (0.98 * n))];
-  let dispMin = Math.min(pLo, res.lowerLimit);
-  let dispMax = Math.max(pHi, res.upperLimit);
-  const pad   = (dispMax - dispMin) * 0.05;
-  dispMin = Math.max(0, dispMin - pad);
-  dispMax = dispMax + pad;
-  const xMin = Math.max(raw[0],   dispMin);
-  const xMax = Math.min(raw[n-1], dispMax);
+  const refMargin = (res.upperLimit - res.lowerLimit) * 0.15;
+  let dispMin = Math.min(pLo, res.lowerLimit - refMargin);
+  let dispMax = Math.max(pHi, res.upperLimit + refMargin);
+  dispMin = Math.max(0, dispMin);
+  // xMin = tatsächliches Daten-Minimum (nicht darunter), xMax = voller Bereich
+  const xMin = Math.max(raw[0], dispMin);
+  const xMax = dispMax;
 
   const nB = Math.min(60, Math.max(15, Math.round(Math.sqrt(n))));
   const bw = (xMax - xMin) / nB;
