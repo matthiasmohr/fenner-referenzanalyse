@@ -136,34 +136,58 @@
     .hidden { display: none !important; }
 
     /* ── Print ── */
+    /* ── Print: Canvas → statisches Bild ──
+       Chart.js-Canvases ignorieren CSS-Layout beim Drucken.
+       Lösung: beforeprint wandelt sie in <img> um, afterprint räumt auf.
+       Damit funktioniert normaler Dokumentfluss, Höhe, Seitenumbruch. */
+    .print-chart-img { display: none; }
+
     @media print {
-      body { background: white; padding: 0; }
+      body { background: white; padding: 0; font-size: 11px; }
       .no-print { display: none !important; }
-      header { background: #1e3a5f !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
-      .charts-grid { grid-template-columns: 1fr 1fr; }
-      .chart-wrap { height: 280px; position: static; }
+      header {
+        background: #1e3a5f !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        padding: 12px 20px; margin-bottom: 10px;
+      }
+      header h1 { font-size: 1.2rem; }
+      header p  { font-size: 0.75rem; }
 
-      /* Drag-Handles und Container-Positionierung komplett aufheben,
-         damit nichts den Canvas beim Drucken verschiebt.            */
+      .card {
+        box-shadow: none; border: 1px solid #ccc;
+        page-break-inside: avoid;
+        padding: 12px 16px; margin-bottom: 10px;
+      }
+      .card h2 { font-size: 0.85rem; margin-bottom: 8px; padding-bottom: 5px; }
+
+      /* Interaktive Elemente weg */
       .plot-container { position: static; }
-      .drag-handle { display: none !important; }
-      .drag-hint { display: none !important; }
+      .drag-handle, .drag-hint { display: none !important; }
 
-      /* Hoffmann-Plot bekommt nach sich einen Seitenumbruch:
-         Seite 1 = Header + Hoffmann-Plot
-         Seite 2 = Kennzahlen + Histogramm               */
-      #hoffmannCard {
-        page-break-after: always;
-        break-after: page;
-      }
-      .chart-wrap-tall { height: 560px; position: static; }
+      /* Canvas verstecken, statisches Bild zeigen */
+      canvas { display: none !important; }
+      .print-chart-img { display: block !important; width: 100%; height: auto; }
 
-      /* Canvas-Elemente sauber im Fluss halten */
-      canvas {
-        max-width: 100% !important;
-        height: auto !important;
-      }
+      /* ── Seite 1: Header + Hoffmann-Plot ── */
+      #hoffmannCard { page-break-after: always; break-after: page; }
+      .chart-wrap, .chart-wrap-tall { height: auto; position: static; }
+
+      /* ── Seite 2: Kennzahlen + Histogramm (kompakt) ── */
+      table.stat th, table.stat td { padding: 3px 8px; font-size: 0.78rem; }
+      .results-grid { gap: 10px; }
+
+      .ref-box { padding: 10px 12px; }
+      .ref-box .lbl  { font-size: 0.72rem; margin-bottom: 4px; }
+      .ref-box .val  { font-size: 1.4rem; }
+      .ref-box .unit { font-size: 0.8rem; }
+      .ref-box .formula { margin-top: 6px; font-size: 0.7rem; }
+      .ref-box code { font-size: 0.72rem; }
+
+      .alert { padding: 5px 8px; font-size: 0.72rem; margin-top: 5px; }
+      .footnote { font-size: 0.68rem; margin-top: 6px; padding-top: 5px; }
+
+      #printOnlyHeader { padding: 8px 14px; }
+      #printOnlyHeader div { font-size: 0.75rem; }
     }
     @media (max-width: 700px) {
       .form-grid, .results-grid, .charts-grid { grid-template-columns: 1fr; }
@@ -248,7 +272,7 @@
         <button class="btn-warn" style="padding:4px 10px; font-size:.8rem;" onclick="reAutoDetect()">&#10227; Neu auto-detektieren</button>
       </div>
 
-      <div style="font-size:.77rem; color:#6b7280; margin-top:6px;">
+      <div class="chart-legend" style="font-size:.77rem; color:#6b7280; margin-top:6px;">
         <span style="display:inline-block; width:12px; height:3px; background:#2563eb; vertical-align:middle; margin-right:4px;"></span> Anpassungsbereich &nbsp;
         <span style="display:inline-block; width:12px; height:3px; background:rgba(148,163,184,0.7); vertical-align:middle; margin-right:4px;"></span> Ausgeschlossene Werte &nbsp;
         <span style="display:inline-block; width:12px; height:3px; background:rgba(220,38,38,0.85); vertical-align:middle; margin-right:4px;"></span> Regressionsgerade &nbsp;
@@ -663,7 +687,7 @@ function drawHoffmann() {
       responsive: true, maintainAspectRatio: false,
       animation: false,
       plugins: {
-        legend: { position:'bottom', labels:{ boxWidth:11, font:{size:11} } },
+        legend: { display: false },
         annotation: {
           annotations: {
             refLo: {
@@ -770,7 +794,7 @@ function drawHistogram() {
     options:{
       responsive:true, maintainAspectRatio:false, animation:false,
       plugins:{
-        legend:{position:'bottom',labels:{boxWidth:11,font:{size:11}}},
+        legend:{ display: false },
         annotation:{
           annotations:{
             refLo:{
@@ -932,6 +956,24 @@ function clearAll() {
   if (gHistChart) { gHistChart.destroy(); gHistChart = null; }
   gRes = null;
 }
+
+// ── Print: Canvas → statisches <img> ──────────────────────────────
+// Chart.js-Canvases respektieren kein CSS-Print-Layout.
+// Trick: beforeprint wandelt jedes Canvas in ein normales <img> um.
+// Das Bild verhält sich wie jedes andere HTML-Element: Höhe, Umbruch,
+// Fluss — alles funktioniert einfach.
+window.addEventListener('beforeprint', () => {
+  document.querySelectorAll('.chart-wrap canvas, .chart-wrap-tall canvas').forEach(canvas => {
+    const img = document.createElement('img');
+    img.src = canvas.toDataURL('image/png', 1.0);
+    img.className = 'print-chart-img';
+    canvas.parentNode.insertBefore(img, canvas.nextSibling);
+  });
+});
+
+window.addEventListener('afterprint', () => {
+  document.querySelectorAll('.print-chart-img').forEach(img => img.remove());
+});
 
 function doPrint() {
   document.getElementById('printOnlyHeader').style.display = 'block';
