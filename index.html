@@ -166,28 +166,41 @@
 
       /* Canvas verstecken, statisches Bild zeigen */
       canvas { display: none !important; }
-      .print-chart-img { display: block !important; width: 100%; height: auto; }
-
-      /* ── Seite 1: Header + Hoffmann-Plot ── */
-      #hoffmannCard { page-break-after: always; break-after: page; }
+      .print-chart-img { display: block !important; height: auto; }
       .chart-wrap, .chart-wrap-tall { height: auto; position: static; }
 
-      /* ── Seite 2: Kennzahlen + Histogramm (kompakt) ── */
-      table.stat th, table.stat td { padding: 3px 8px; font-size: 0.78rem; }
-      .results-grid { gap: 10px; }
+      /* ── ALLES AUF EINE SEITE ──
+         A4 nutzbar ≈ 980px. Budget:
+           Header          50px
+           Hoffmann-Plot  380px  (Bild max 340px + Titel/Legende)
+           Kennzahlen     200px  (Tabelle + Referenzbox nebeneinander)
+           Histogramm     280px  (Bild max 230px + Titel/Legende)
+           Fußnote         30px
+           ─────────────  940px  ✓ passt
+      */
+      #hoffmannCard .print-chart-img { max-height: 340px; width: auto; max-width: 100%; }
+      #histCard .print-chart-img     { max-height: 230px; width: auto; max-width: 100%; }
 
-      .ref-box { padding: 10px 12px; }
-      .ref-box .lbl  { font-size: 0.72rem; margin-bottom: 4px; }
-      .ref-box .val  { font-size: 1.4rem; }
-      .ref-box .unit { font-size: 0.8rem; }
-      .ref-box .formula { margin-top: 6px; font-size: 0.7rem; }
-      .ref-box code { font-size: 0.72rem; }
+      /* KEIN Seitenumbruch */
+      #hoffmannCard { page-break-after: auto; break-after: auto; }
 
-      .alert { padding: 5px 8px; font-size: 0.72rem; margin-top: 5px; }
-      .footnote { font-size: 0.68rem; margin-top: 6px; padding-top: 5px; }
+      /* Kompakte Kennzahlen */
+      table.stat th, table.stat td { padding: 2px 6px; font-size: 0.72rem; }
+      .results-grid { gap: 8px; }
 
-      #printOnlyHeader { padding: 8px 14px; }
-      #printOnlyHeader div { font-size: 0.75rem; }
+      .ref-box { padding: 8px 10px; }
+      .ref-box .lbl  { font-size: 0.68rem; margin-bottom: 2px; }
+      .ref-box .val  { font-size: 1.2rem; }
+      .ref-box .unit { font-size: 0.75rem; margin-top: 2px; }
+      .ref-box .formula { margin-top: 4px; font-size: 0.65rem; }
+      .ref-box code { font-size: 0.68rem; }
+
+      .alert { padding: 4px 6px; font-size: 0.68rem; margin-top: 4px; }
+      .footnote { font-size: 0.62rem; margin-top: 4px; padding-top: 4px; }
+
+      /* Print-Header minimal */
+      #printOnlyHeader { padding: 6px 12px; margin-bottom: 6px; }
+      #printOnlyHeader div { font-size: 0.7rem; }
     }
     @media (max-width: 700px) {
       .form-grid, .results-grid, .charts-grid { grid-template-columns: 1fr; }
@@ -318,7 +331,7 @@
     </div>
 
     <!-- Histogramm -->
-    <div class="card">
+    <div class="card" id="histCard">
       <h2>Häufigkeitsverteilung</h2>
       <div class="chart-wrap"><canvas id="histCanvas"></canvas></div>
       <div style="font-size:.77rem; color:#6b7280; margin-top:6px;">
@@ -1000,6 +1013,43 @@ function loadExample() {
   document.getElementById('dataInput').value=v.map(x=>x.toFixed(1)).join('\n');
   document.getElementById('errorMsg').classList.add('hidden');
 }
+
+// ── URL-Parameter-API für programmatischen Aufruf ────────────────────
+// Parameter:
+//   ?name=Natrium          Analytname
+//   &unit=mmol/L           Einheit
+//   &log=1                 Log-Transformation (0 oder 1)
+//   &data=135,137,140,...  Messwerte (Komma-getrennt)
+//   &autoprint=1           Automatisch drucken (für Batch-Modus)
+//
+// Beispiel:
+//   index.html?name=CRP&unit=mg/L&log=1&data=0.5,1.2,3.4,...&autoprint=1
+//
+(function autoStartFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has('data')) return; // kein programmatischer Aufruf
+
+  const name = params.get('name') || 'Analyt';
+  const unit = params.get('unit') || '';
+  const logT = params.get('log') === '1';
+  const data = params.get('data') || '';
+  const autoprint = params.get('autoprint') === '1';
+
+  document.getElementById('analyteName').value = name;
+  document.getElementById('analyteUnit').value = unit;
+  document.getElementById('logTransform').checked = logT;
+  document.getElementById('dataInput').value = data.replace(/,/g, '\n');
+
+  // Analyse starten (kurze Verzögerung damit Chart.js initialisiert ist)
+  setTimeout(() => {
+    runAnalysis();
+
+    if (autoprint) {
+      // Warten bis Charts gerendert sind, dann drucken
+      setTimeout(() => { doPrint(); }, 500);
+    }
+  }, 200);
+})();
 </script>
 </body>
 </html>
