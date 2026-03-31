@@ -4,6 +4,7 @@
   "description": "Werkzeug zur Schätzung von Referenzintervallen aus Routinelabordaten nach dem **Hoffmann-Verfahren** (Hoffmann RG, 1963).",
   "main": "index.js",
   "scripts": {
+    "start": "serve -l $PORT .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -11,6 +12,9 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "serve": "^14.2.6"
+  },
+  "devDependencies": {
     "puppeteer": "^24.40.0"
   }
 }
