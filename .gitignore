@@ -3,4 +3,5 @@ output/
 references/
 .claude/
 
+.DS_Store
 package-lock.json

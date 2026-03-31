@@ -641,8 +641,15 @@ function drawHoffmann() {
   const xMin = raw[0], xMax = raw[raw.length-1];
   const zz   = res.zz;
 
-  const inside  = raw.map((x,i) => i>=res.lo && i<res.hi ? {x,y:zz[i]} : null).filter(Boolean);
-  const outside = raw.map((x,i) => i< res.lo || i>=res.hi ? {x,y:zz[i]} : null).filter(Boolean);
+  // Für große Datensätze: Anzeige auf max. 3000 Punkte begrenzen.
+  // Berechnung (Regression, Grenzen) läuft immer auf allen Daten.
+  const MAX_DISPLAY = 10000;
+  const step = raw.length > MAX_DISPLAY ? Math.ceil(raw.length / MAX_DISPLAY) : 1;
+  const inside  = [], outside = [];
+  for (let i = 0; i < raw.length; i += step) {
+    const pt = { x: raw[i], y: zz[i] };
+    if (i >= res.lo && i < res.hi) inside.push(pt); else outside.push(pt);
+  }
 
   // Regressionsgerade/-kurve auf voller Breite.
   // Bei Log-Transformation ist z = a + b·log(x) auf der Original-Skala
