@@ -6,6 +6,8 @@
   <title>Hoffmann Referenzbereich-Analyse</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body {
@@ -283,6 +285,8 @@
       <div class="drag-hint no-print">
         Orangene Grenzlinien ziehen zum Verfeinern der Auswahl &nbsp;&middot;&nbsp;
         <button class="btn-warn" style="padding:4px 10px; font-size:.8rem;" onclick="reAutoDetect()">&#10227; Neu auto-detektieren</button>
+        &nbsp;&middot;&nbsp;
+        <button class="btn-warn" style="padding:4px 10px; font-size:.8rem;" onclick="gHoffChart && gHoffChart.resetZoom()">&#8634; Zoom zurücksetzen</button>
       </div>
 
       <div class="chart-legend" style="font-size:.77rem; color:#6b7280; margin-top:6px;">
@@ -634,7 +638,13 @@ function renderStats() {
 
 // ── Hoffmann-Plot ─────────────────────────────────────────────────────
 function drawHoffmann() {
-  if (gHoffChart) gHoffChart.destroy();
+  // Zoom-Zustand vor dem Neuzeichnen retten
+  let savedZoom = null;
+  if (gHoffChart) {
+    const sx = gHoffChart.scales.x, sy = gHoffChart.scales.y;
+    savedZoom = { xMin: sx.min, xMax: sx.max, yMin: sy.min, yMax: sy.max };
+    gHoffChart.destroy();
+  }
   const ctx = document.getElementById('hoffmannCanvas').getContext('2d');
   const res = gRes;
   const raw = res.sortedRaw;
@@ -724,6 +734,19 @@ function drawHoffmann() {
           callbacks: {
             label: c => `x=${fmt(c.parsed.x,3)}, z=${fmt(c.parsed.y,3)}`
           }
+        },
+        zoom: {
+          zoom: {
+            wheel: { enabled: true },
+            pinch: { enabled: true },
+            mode: 'xy',
+            onZoom: () => positionHandles()
+          },
+          pan: {
+            enabled: true,
+            mode: 'xy',
+            onPan: () => positionHandles()
+          }
         }
       },
       scales: {
@@ -741,6 +764,12 @@ function drawHoffmann() {
       }
     }
   });
+
+  // Zoom-Zustand wiederherstellen
+  if (savedZoom) {
+    gHoffChart.zoomScale('x', { min: savedZoom.xMin, max: savedZoom.xMax }, 'none');
+    gHoffChart.zoomScale('y', { min: savedZoom.yMin, max: savedZoom.yMax }, 'none');
+  }
 }
 
 // ── Histogramm ────────────────────────────────────────────────────────
