@@ -143,6 +143,8 @@
        Lösung: beforeprint wandelt sie in <img> um, afterprint räumt auf.
        Damit funktioniert normaler Dokumentfluss, Höhe, Seitenumbruch. */
     .print-chart-img { display: none; }
+    /* Print-only: off-screen statt display:none, damit Canvas rendern kann */
+    .print-only { position: absolute; left: -9999px; overflow: hidden; }
 
     @media print {
       body { background: white; padding: 0; font-size: 11px; }
@@ -196,6 +198,9 @@
       .ref-box .unit { font-size: 0.75rem; margin-top: 2px; }
       .ref-box .formula { margin-top: 4px; font-size: 0.65rem; }
       .ref-box code { font-size: 0.68rem; }
+
+      .print-only { position: static !important; left: auto !important; }
+      #detailCard .print-chart-img { max-height: 200px; width: auto; max-width: 100%; }
 
       .alert { padding: 4px 6px; font-size: 0.68rem; margin-top: 4px; }
       .footnote { font-size: 0.62rem; margin-top: 4px; padding-top: 4px; }
@@ -342,6 +347,21 @@
         Blau: innerhalb Referenzintervall &middot; Kurve: geschätzte Normalverteilung &middot; Linien: Referenzgrenzen
       </div>
     </div>
+
+    <!-- Print-only: Detailansicht Anpassungsbereich -->
+    <div class="card print-only" id="detailCard" style="display:none;">
+      <h2 id="detailTitle">Anpassungsbereich (Detail)</h2>
+      <div class="chart-wrap" style="height:280px;">
+        <canvas id="detailCanvas"></canvas>
+      </div>
+      <div style="font-size:.72rem; color:#6b7280; margin-top:4px;">
+        Nur der für die Regression verwendete lineare Abschnitt.
+        Grün gestrichelt: Referenzgrenzen bei ±1,96 SD.
+      </div>
+    </div>
+
+    <!-- Originaldaten (versteckt, für Reproduzierbarkeit im gespeicherten HTML) -->
+    <div id="originalData" style="display:none;"></div>
 
     <!-- Drucken -->
     <div class="card no-print">
@@ -559,6 +579,13 @@ function runAnalysis() {
   }
 
   gRes = { ...base, ...fit };
+
+  // Originaldaten für Reproduzierbarkeit im HTML einbetten
+  document.getElementById('originalData').textContent = JSON.stringify({
+    name: gName, unit: gUnit, log: logT,
+    values: raw, timestamp: new Date().toISOString()
+  });
+
   document.getElementById('resultsSection').classList.remove('hidden');
   renderAll();
   document.getElementById('resultsSection').scrollIntoView({behavior:'smooth'});
@@ -569,6 +596,7 @@ function renderAll() {
   renderStats();
   drawHoffmann();
   drawHistogram();
+  drawDetail();
   positionHandles();
 }
 
@@ -875,6 +903,90 @@ function drawHistogram() {
 // ═══════════════════════════════════════════════════════════════════════
 //  INTERAKTIVE DRAG-GRIFFE
 //  Der Nutzer zieht die orangen Linien, um den Anpassungsbereich
+// ── Detail-Chart: nur Anpassungsbereich (Print-only) ─────────────────
+let gDetailChart = null;
+
+function drawDetail() {
+  if (gDetailChart) gDetailChart.destroy();
+  const res = gRes;
+  if (!res) return;
+
+  document.getElementById('detailCard').style.display = '';
+  const tag = `${gName}${gUnit ? ' ('+gUnit+')' : ''}`;
+  document.getElementById('detailTitle').textContent = 'Anpassungsbereich (Detail): ' + tag;
+
+  const ctx = document.getElementById('detailCanvas').getContext('2d');
+  const raw = res.sortedRaw, zz = res.zz;
+
+  // Nur die Punkte im Anpassungsbereich
+  const pts = [];
+  for (let i = res.lo; i < res.hi; i++) pts.push({ x: raw[i], y: zz[i] });
+
+  // Regressionslinie über Anpassungsbereich
+  const xLo = raw[res.lo], xHi = raw[res.hi - 1];
+  const nSeg = res.logT ? 200 : 2;
+  const fitLine = Array.from({length: nSeg}, (_, i) => {
+    const x   = xLo + (i / (nSeg - 1)) * (xHi - xLo);
+    const xTr = res.logT ? Math.log(x) : x;
+    return { x, y: res.a + res.b * xTr };
+  });
+
+  // Referenzgrenzen als vertikale Markierung via Annotation
+  gDetailChart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Anpassungsbereich', data: pts,
+          pointRadius: 3, pointBorderWidth: 1,
+          pointBackgroundColor: 'rgba(37,99,235,0.65)',
+          pointBorderColor: 'rgba(29,78,216,0.9)'
+        },
+        {
+          label: 'Regressionsgerade', data: fitLine,
+          type: 'line', pointRadius: 0,
+          borderColor: 'rgba(220,38,38,0.85)', borderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: { display: false },
+        annotation: {
+          annotations: {
+            refLoLine: {
+              type: 'line', scaleID: 'x', value: res.lowerLimit,
+              borderColor: 'rgba(22,163,74,0.8)', borderWidth: 2, borderDash: [5,4],
+              label: { display: true, content: fmt(res.lowerLimit) + (gUnit?' '+gUnit:''),
+                       position: 'start', font: { size: 10 } }
+            },
+            refHiLine: {
+              type: 'line', scaleID: 'x', value: res.upperLimit,
+              borderColor: 'rgba(22,163,74,0.8)', borderWidth: 2, borderDash: [5,4],
+              label: { display: true, content: fmt(res.upperLimit) + (gUnit?' '+gUnit:''),
+                       position: 'start', font: { size: 10 } }
+            },
+            zLoLine: {
+              type: 'line', scaleID: 'y', value: -1.96,
+              borderColor: 'rgba(22,163,74,0.4)', borderWidth: 1, borderDash: [3,3]
+            },
+            zHiLine: {
+              type: 'line', scaleID: 'y', value: 1.96,
+              borderColor: 'rgba(22,163,74,0.4)', borderWidth: 1, borderDash: [3,3]
+            }
+          }
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: gName + (gUnit ? ' (' + gUnit + ')' : '') } },
+        y: { title: { display: true, text: 'Normales Quantil (z)' } }
+      }
+    }
+  });
+}
+
 //  (= den "geraden Abschnitt") manuell nachzujustieren.
 //  Die Regression aktualisiert sich sofort.
 // ═══════════════════════════════════════════════════════════════════════
@@ -1003,8 +1115,9 @@ function clearAll() {
   document.getElementById('logTransform').checked = false;
   document.getElementById('errorMsg').classList.add('hidden');
   document.getElementById('resultsSection').classList.add('hidden');
-  if (gHoffChart) { gHoffChart.destroy(); gHoffChart = null; }
-  if (gHistChart) { gHistChart.destroy(); gHistChart = null; }
+  if (gHoffChart)   { gHoffChart.destroy();   gHoffChart = null; }
+  if (gHistChart)   { gHistChart.destroy();   gHistChart = null; }
+  if (gDetailChart) { gDetailChart.destroy(); gDetailChart = null; }
   gRes = null;
 }
 

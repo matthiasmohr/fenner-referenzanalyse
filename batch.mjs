@@ -1,36 +1,36 @@
 #!/usr/bin/env node
 // ── Batch-PDF-Erzeugung für Hoffmann-Referenzanalyse ─────────────────
 //
-// Liest eine CSV-Datei mit Analyten und deren Messwerten ein und erzeugt
-// für jeden Analyten ein PDF über die Hoffmann-Analyse.
+// Verarbeitet einen SQL-Export (eine große CSV mit allen Analyten gemischt)
+// und erzeugt für jeden Analyten ein PDF.
 //
 // Installation (einmalig):
 //   npm install puppeteer
 //
-// CSV-Format (Semikolon-getrennt, da Dezimalkomma möglich):
-//   name;unit;log;values
-//   Natrium;mmol/L;0;135;137;140;142;138;...
-//   CRP;mg/L;1;0.5;1.2;3.4;0.8;...
+// ── SQL-Export-Format ────────────────────────────────────────────────
+// Semikolon-getrennte CSV, erste Zeile = Header.
+// Pflicht-Spalten: kuerzel, strerg
+// Alle anderen Spalten (auftid, labordatum, geschlecht, ...) werden ignoriert.
 //
-//   Spalte 1: Analytname
-//   Spalte 2: Einheit
-//   Spalte 3: Log-Transformation (0 oder 1)
-//   Spalte 4+: Messwerte (alle weiteren Spalten = Werte)
+//   auftid;labordatum;geschlecht;alter_jahre;alter_tage;verfahrennr;kuerzel;strerg
+//   10001;2024-01-15;m;45;16436;1;Na;140,2
+//   10002;2024-01-15;w;62;22645;1;Na;138,7
+//   10003;2024-01-15;m;38;13880;2;CRP;1,4
 //
-// Alternativ: JSON-Format (siehe unten)
+// ── Konfig-Format (optional) ─────────────────────────────────────────
+// Semikolon-getrennte CSV, erste Zeile = Header.
+// Fehlende Analyten: name=kuerzel, unit='', log=0 (linear)
 //
-// Aufruf:
-//   node batch.mjs eingabe.csv                    # CSV-Datei
-//   node batch.mjs eingabe.json                   # JSON-Datei
-//   node batch.mjs eingabe.csv --outdir=reports   # Ausgabeverzeichnis
+//   kuerzel;name;unit;log
+//   Na;Natrium;mmol/L;0
+//   K;Kalium;mmol/L;0
+//   CRP;C-reaktives Protein;mg/L;1
+//   TSH;Thyreoidea-stim. Hormon;mU/L;1
 //
-// Ausgabe: Ein PDF pro Analyt im Verzeichnis ./output/ (oder --outdir)
-//
-// JSON-Format:
-//   [
-//     { "name": "Natrium", "unit": "mmol/L", "log": false, "values": [135, 137, ...] },
-//     { "name": "CRP",     "unit": "mg/L",   "log": true,  "values": [0.5, 1.2, ...] }
-//   ]
+// ── Aufruf ───────────────────────────────────────────────────────────
+//   node batch.mjs export.csv
+//   node batch.mjs export.csv --config=analyten.csv
+//   node batch.mjs export.csv --config=analyten.csv --outdir=reports
 
 import puppeteer from 'puppeteer';
 import fs from 'fs';
@@ -39,97 +39,163 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// ── CSV parsen ───────────────────────────────────────────────────────
-function parseCSV(text) {
-  const lines = text.trim().split('\n').filter(l => l.trim());
-  const analytes = [];
+// ── Hilfsfunktion: Separator automatisch erkennen + Header parsen ────
+function detectSeparator(line) {
+  const counts = { ';': 0, ',': 0, '\t': 0 };
+  for (const c of line) if (c in counts) counts[c]++;
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+}
 
-  for (let i = 0; i < lines.length; i++) {
+function parseHeader(line) {
+  // BOM entfernen, Separator erkennen, alles lowercase
+  const clean = line.replace(/^\uFEFF/, '').trim();
+  const sep = detectSeparator(clean);
+  return { headers: clean.split(sep).map(h => h.trim().toLowerCase()), sep };
+}
+
+// ── Konfig-Datei laden ───────────────────────────────────────────────
+// Gibt Map zurück: kuerzel → { name, unit, log }
+function loadConfig(configFile) {
+  const config = new Map();
+  if (!configFile) return config;
+
+  if (!fs.existsSync(configFile)) {
+    if (configArg) {
+      // Explizit angegeben aber nicht gefunden → Fehler
+      console.error(`Konfig-Datei nicht gefunden: ${configFile}`);
+      process.exit(1);
+    }
+    // Standard-Pfad nicht vorhanden → ohne Konfig weitermachen
+    console.log('Konfig:  (keine gefunden — Kürzel als Name, linear, keine Einheit)\n');
+    return config;
+  }
+
+  const lines = fs.readFileSync(configFile, 'utf-8').trim().split('\n');
+  const { headers, sep: configSep } = parseHeader(lines[0]);
+
+  const iKuerzel = headers.indexOf('kuerzel');
+  const iName    = headers.indexOf('name');
+  const iUnit    = headers.indexOf('unit');
+  const iLog     = headers.indexOf('log');
+
+  if (iKuerzel === -1) {
+    console.error('Konfig-Datei: Spalte "kuerzel" fehlt.');
+    process.exit(1);
+  }
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line || line.startsWith('#')) continue;
+    const parts = line.split(configSep);
+    const kuerzel = parts[iKuerzel]?.trim();
+    if (!kuerzel) continue;
+    config.set(kuerzel, {
+      name: iName  >= 0 ? parts[iName]?.trim()  || kuerzel : kuerzel,
+      unit: iUnit  >= 0 ? parts[iUnit]?.trim()  || ''      : '',
+      log:  iLog   >= 0 ? parts[iLog]?.trim() === '1'      : false,
+    });
+  }
+
+  console.log(`Konfig geladen: ${config.size} Analyt(en) konfiguriert.`);
+  return config;
+}
+
+// ── SQL-Export einlesen und nach kuerzel gruppieren ──────────────────
+function loadExport(exportFile) {
+  const text = fs.readFileSync(exportFile, 'utf-8');
+  const lines = text.trim().split('\n');
+
+  const { headers, sep: exportSep } = parseHeader(lines[0]);
+  const iKuerzel = headers.indexOf('kuerzel');
+  const iStrerg  = headers.indexOf('strerg');
+
+  if (iKuerzel === -1) { console.error(`Export: Spalte "kuerzel" fehlt. Gefundene Spalten: ${headers.join(', ')}`); process.exit(1); }
+  if (iStrerg  === -1) { console.error(`Export: Spalte "strerg" fehlt. Gefundene Spalten: ${headers.join(', ')}`);  process.exit(1); }
+
+  const grouped = new Map(); // kuerzel → number[]
+  let skipped = 0;
+
+  for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line || line.startsWith('#')) continue;
 
-    // Erste Zeile mit "name" überspringen (Header)
-    if (i === 0 && line.toLowerCase().startsWith('name')) continue;
+    const parts = line.split(exportSep);
+    const kuerzel = parts[iKuerzel]?.trim();
+    const raw     = parts[iStrerg]?.trim().replace(',', '.');
+    if (!kuerzel || !raw) continue;
 
-    const parts = line.split(';');
-    if (parts.length < 4) {
-      console.warn(`Zeile ${i + 1} übersprungen (zu wenige Spalten): ${line.substring(0, 60)}...`);
-      continue;
-    }
+    const v = Number(raw);
+    if (!isFinite(v) || isNaN(v)) { skipped++; continue; }
 
-    const name = parts[0].trim();
-    const unit = parts[1].trim();
-    const log  = parts[2].trim() === '1';
-    const values = parts.slice(3)
-      .map(v => v.trim().replace(',', '.'))
-      .filter(v => v !== '')
-      .map(Number)
-      .filter(v => !isNaN(v) && isFinite(v));
-
-    if (values.length < 20) {
-      console.warn(`"${name}": Nur ${values.length} gültige Werte — übersprungen (min. 20)`);
-      continue;
-    }
-
-    analytes.push({ name, unit, log, values });
+    if (!grouped.has(kuerzel)) grouped.set(kuerzel, []);
+    grouped.get(kuerzel).push(v);
   }
 
-  return analytes;
-}
-
-// ── JSON parsen ──────────────────────────────────────────────────────
-function parseJSON(text) {
-  const data = JSON.parse(text);
-  return data.filter(a => {
-    if (!a.values || a.values.length < 20) {
-      console.warn(`"${a.name}": Nur ${a.values?.length || 0} Werte — übersprungen`);
-      return false;
-    }
-    return true;
-  }).map(a => ({
-    name: a.name || 'Analyt',
-    unit: a.unit || '',
-    log: !!a.log,
-    values: a.values.map(Number).filter(v => !isNaN(v) && isFinite(v))
-  }));
+  if (skipped > 0) console.warn(`${skipped} Zeilen mit ungültigem strerg übersprungen.`);
+  return grouped;
 }
 
 // ── Hauptprogramm ────────────────────────────────────────────────────
 async function main() {
   const args = process.argv.slice(2);
-  const inputFile = args.find(a => !a.startsWith('--'));
-  const outdirArg = args.find(a => a.startsWith('--outdir='));
-  const outdir = outdirArg ? outdirArg.split('=')[1] : 'output';
+  const inputArg    = args.find(a => !a.startsWith('--'));
+  const configArg   = args.find(a => a.startsWith('--config='));
+  const outdirArg   = args.find(a => a.startsWith('--outdir='));
+  const outdir      = outdirArg ? outdirArg.split('=')[1] : 'output';
 
-  if (!inputFile) {
-    console.error('Aufruf: node batch.mjs <eingabe.csv|eingabe.json> [--outdir=output]');
-    console.error('');
-    console.error('CSV-Format (Semikolon-getrennt):');
-    console.error('  name;unit;log;wert1;wert2;wert3;...');
-    console.error('  Natrium;mmol/L;0;135;137;140;142;...');
-    console.error('  CRP;mg/L;1;0.5;1.2;3.4;...');
-    console.error('');
-    console.error('JSON-Format:');
-    console.error('  [{"name":"Natrium","unit":"mmol/L","log":false,"values":[135,137,...]}]');
+  // Eingabedateien standardmäßig im input/-Ordner suchen
+  const inputFile  = inputArg
+    ? path.resolve(inputArg)
+    : path.resolve(__dirname, 'input', 'export.csv');
+
+  const configFile = configArg
+    ? path.resolve(configArg.split('=')[1])
+    : path.resolve(__dirname, 'input', 'analyten.csv');
+
+  console.log(`Export:  ${inputFile}`);
+  console.log(`Konfig:  ${configFile}`);
+
+  if (!fs.existsSync(inputFile)) {
+    console.error(`\nExport-Datei nicht gefunden: ${inputFile}`);
+    console.error('Entweder Datei unter input/export.csv ablegen oder Pfad als Argument übergeben:');
+    console.error('  node batch.mjs pfad/zur/export.csv [--config=pfad/zur/analyten.csv]');
     process.exit(1);
   }
 
-  const text = fs.readFileSync(inputFile, 'utf-8');
-  const isJSON = inputFile.toLowerCase().endsWith('.json');
-  const analytes = isJSON ? parseJSON(text) : parseCSV(text);
+  const config  = loadConfig(configFile);
+  const grouped = loadExport(inputFile);
+
+  // Analyten zusammenstellen
+  const analytes = [];
+  for (const [kuerzel, values] of grouped) {
+    const cfg = config.get(kuerzel) || { name: kuerzel, unit: '', log: false };
+    // Anzeigename: "Klartext-Name (Kürzel)" — oder nur Kürzel wenn Name == Kürzel
+    const displayName = cfg.name !== kuerzel
+      ? `${cfg.name} (${kuerzel})`
+      : kuerzel;
+
+    if (values.length < 20) {
+      console.warn(`"${displayName}": Nur ${values.length} Werte — übersprungen (min. 20)`);
+      continue;
+    }
+    analytes.push({ kuerzel, displayName, unit: cfg.unit, log: cfg.log, values });
+  }
+
+  // Alphabetisch sortieren
+  analytes.sort((a, b) => a.kuerzel.localeCompare(b.kuerzel));
 
   if (analytes.length === 0) {
-    console.error('Keine gültigen Analyten in der Eingabedatei gefunden.');
+    console.error('Keine gültigen Analyten gefunden (alle < 20 Werte?).');
     process.exit(1);
   }
 
-  console.log(`${analytes.length} Analyt(en) geladen. Starte Batch-Verarbeitung...\n`);
+  console.log(`\n${analytes.length} Analyt(en) zur Verarbeitung. Starte Batch...\n`);
 
-  // Ausgabeverzeichnis erstellen
+  // Ausgabeverzeichnis
   const outPath = path.resolve(outdir);
   fs.mkdirSync(outPath, { recursive: true });
 
-  // HTML-Datei-Pfad
+  // HTML-Datei
   const htmlPath = path.resolve(__dirname, 'index.html');
   if (!fs.existsSync(htmlPath)) {
     console.error(`index.html nicht gefunden: ${htmlPath}`);
@@ -143,38 +209,34 @@ async function main() {
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
-  let success = 0;
-  let failed = 0;
+  let success = 0, failed = 0;
 
   for (let i = 0; i < analytes.length; i++) {
     const a = analytes[i];
     const tag = `[${i + 1}/${analytes.length}]`;
-    process.stdout.write(`${tag} ${a.name} (${a.values.length} Werte)... `);
+    process.stdout.write(`${tag} ${a.displayName} (${a.values.length} Werte)... `);
 
     try {
       const page = await browser.newPage();
 
-      // URL mit Parametern bauen
       const params = new URLSearchParams({
-        name: a.name,
+        name: a.displayName,
         unit: a.unit,
-        log: a.log ? '1' : '0',
+        log:  a.log ? '1' : '0',
         data: a.values.join(',')
       });
-      const url = `${fileUrl}?${params.toString()}`;
 
-      await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
-
-      // Warten bis Analyse fertig (resultsSection sichtbar)
+      await page.goto(`${fileUrl}?${params.toString()}`, {
+        waitUntil: 'networkidle0', timeout: 30000
+      });
       await page.waitForSelector('#resultsSection:not(.hidden)', { timeout: 10000 });
-
-      // Kurz warten damit Charts vollständig gerendert sind
       await new Promise(r => setTimeout(r, 800));
 
-      // PDF erzeugen
-      const safeName = a.name.replace(/[^a-zA-Z0-9äöüÄÖÜß_\-]/g, '_');
-      const pdfPath = path.join(outPath, `${safeName}.pdf`);
+      const safeName = a.kuerzel.replace(/[^a-zA-Z0-9äöüÄÖÜß_\-]/g, '_');
+      const pdfPath  = path.join(outPath, `${safeName}.pdf`);
+      const htmlOut  = path.join(outPath, `${safeName}.html`);
 
+      // PDF erzeugen
       await page.pdf({
         path: pdfPath,
         format: 'A4',
@@ -182,9 +244,38 @@ async function main() {
         margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' }
       });
 
+      // HTML speichern: Canvas → Inline-Images, Textarea-Werte fixieren
+      const htmlContent = await page.evaluate(() => {
+        // Textarea-Wert als Attribut setzen (DOM-Serialisierung verliert .value)
+        document.querySelectorAll('textarea').forEach(ta => {
+          ta.textContent = ta.value;
+        });
+        // Input-Werte als Attribut setzen
+        document.querySelectorAll('input[type="text"], input[type="number"]').forEach(inp => {
+          inp.setAttribute('value', inp.value);
+        });
+        document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+          if (cb.checked) cb.setAttribute('checked', '');
+          else cb.removeAttribute('checked');
+        });
+        // Statische Vorschaubilder neben Canvases einfügen (Canvas bleibt erhalten)
+        document.querySelectorAll('canvas').forEach(canvas => {
+          try {
+            const img = document.createElement('img');
+            img.src = canvas.toDataURL('image/png', 1.0);
+            img.className = 'saved-preview-img';
+            img.style.width = '100%';
+            img.style.height = 'auto';
+            canvas.style.display = 'none';
+            canvas.parentNode.insertBefore(img, canvas.nextSibling);
+          } catch(e) {}
+        });
+        return document.documentElement.outerHTML;
+      });
+      fs.writeFileSync(htmlOut, '<!DOCTYPE html>\n' + htmlContent, 'utf-8');
+
       console.log(`✓ → ${pdfPath}`);
       success++;
-
       await page.close();
     } catch (err) {
       console.log(`✗ Fehler: ${err.message}`);
