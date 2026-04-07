@@ -508,8 +508,10 @@ function buildHoffmann(rawData, logT) {
 
 // ── Daten parsen ──────────────────────────────────────────────────────
 function parseData(txt) {
-  return txt.split(/[\s,;]+/)
-    .map(s => parseFloat(s.replace(',','.')))
+  // Komma ist immer Dezimaltrennzeichen, niemals Feldtrennzeichen.
+  // Trennzeichen zwischen Werten: Whitespace oder Semikolon.
+  return txt.split(/[\s;]+/)
+    .map(s => parseFloat(s.replace(',', '.')))
     .filter(v => isFinite(v) && !isNaN(v));
 }
 
