@@ -244,35 +244,10 @@ async function main() {
         margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' }
       });
 
-      // HTML speichern: Canvas → Inline-Images, Textarea-Werte fixieren
-      const htmlContent = await page.evaluate(() => {
-        // Textarea-Wert als Attribut setzen (DOM-Serialisierung verliert .value)
-        document.querySelectorAll('textarea').forEach(ta => {
-          ta.textContent = ta.value;
-        });
-        // Input-Werte als Attribut setzen
-        document.querySelectorAll('input[type="text"], input[type="number"]').forEach(inp => {
-          inp.setAttribute('value', inp.value);
-        });
-        document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-          if (cb.checked) cb.setAttribute('checked', '');
-          else cb.removeAttribute('checked');
-        });
-        // Statische Vorschaubilder neben Canvases einfügen (Canvas bleibt erhalten)
-        document.querySelectorAll('canvas').forEach(canvas => {
-          try {
-            const img = document.createElement('img');
-            img.src = canvas.toDataURL('image/png', 1.0);
-            img.className = 'saved-preview-img';
-            img.style.width = '100%';
-            img.style.height = 'auto';
-            canvas.style.display = 'none';
-            canvas.parentNode.insertBefore(img, canvas.nextSibling);
-          } catch(e) {}
-        });
-        return document.documentElement.outerHTML;
-      });
-      fs.writeFileSync(htmlOut, '<!DOCTYPE html>\n' + htmlContent, 'utf-8');
+      // HTML speichern (Originaldaten sind im #originalData-div eingebettet,
+      // beim Öffnen wird die Analyse automatisch daraus neu gestartet)
+      const htmlContent = await page.content();
+      fs.writeFileSync(htmlOut, htmlContent, 'utf-8');
 
       console.log(`✓ → ${pdfPath}`);
       success++;

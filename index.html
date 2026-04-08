@@ -1201,6 +1201,26 @@ function loadExample() {
     }
   }, 200);
 })();
+
+// ── Gespeichertes HTML wiederherstellen ──────────────────────────────
+// Wenn #originalData gefüllt ist (= gespeichertes HTML aus Batch),
+// Formular befüllen und Analyse automatisch starten.
+(function autoRestoreFromSaved() {
+  const el = document.getElementById('originalData');
+  if (!el || !el.textContent.trim()) return;
+  // URL-Parameter haben Vorrang
+  if (new URLSearchParams(window.location.search).has('data')) return;
+
+  try {
+    const saved = JSON.parse(el.textContent);
+    document.getElementById('analyteName').value = saved.name || '';
+    document.getElementById('analyteUnit').value = saved.unit || '';
+    document.getElementById('logTransform').checked = !!saved.log;
+    document.getElementById('dataInput').value = saved.values.join('\n');
+
+    setTimeout(() => { runAnalysis(); }, 200);
+  } catch(e) { /* JSON kaputt — ignorieren */ }
+})();
 </script>
 </body>
 </html>
