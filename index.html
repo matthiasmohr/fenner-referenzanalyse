@@ -259,7 +259,8 @@
       <div style="display:flex; justify-content:space-between; align-items:start;">
         <div>
           <div style="font-size:1.2rem; font-weight:700;" id="printTitle"></div>
-          <div style="color:#6b7280; font-size:.82rem; margin-top:3px;" id="printMeta"></div>
+          <div style="color:#6b7280; font-size:.82rem; margin-top:3px;" id="printFilter"></div>
+          <div style="color:#6b7280; font-size:.82rem; margin-top:1px;" id="printMeta"></div>
         </div>
         <div style="text-align:right; font-size:.78rem; color:#6b7280;">
           Methode: Hoffmann-Verfahren (1963)<br>
@@ -609,7 +610,13 @@ function renderStats() {
 
   const ph = document.getElementById('printOnlyHeader');
   ph.style.display = 'block';
-  document.getElementById('printTitle').textContent = 'Referenzbereich-Analyse: ' + tag;
+  document.getElementById('printTitle').textContent = tag;
+
+  // Filterzeile: Geschlecht/Alter aus dem Namen extrahieren (nach " — ")
+  const dashIdx = gName.indexOf(' — ');
+  const filterText = dashIdx >= 0 ? gName.substring(dashIdx + 3) : '';
+  document.getElementById('printFilter').textContent = filterText ? `Gruppe: ${filterText}` : '';
+
   document.getElementById('printMeta').textContent  =
     `Erstellt am ${new Date().toLocaleString('de-DE')} · n = ${res.n} Messwerte`;
 
