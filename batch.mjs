@@ -7,10 +7,10 @@
 // ── SQL-Export-Format ────────────────────────────────────────────────
 // Semikolon-getrennte CSV, erste Zeile = Header.
 // Pflicht-Spalten: kuerzel, strerg
-// Optional:        geschlecht (m/w), alter_tage
+// Optional:        geschlecht (m/w), alter_tage, messplatz_kuerzel
 //
-//   auftid;labordatum;geschlecht;alter_jahre;alter_tage;verfahrennr;kuerzel;strerg
-//   10001;2024-01-15;m;45;16436;1;Na;140,2
+//   auftid;labordatum;geschlecht;alter_jahre;alter_tage;verfahrennr;kuerzel;strerg;messplatz_kuerzel
+//   10001;2024-01-15;m;45;16436;1;Na;140,2;COBAS1
 //
 // ── Konfig-Format (input/analyten.csv) ───────────────────────────────
 // Jede Zeile = eine Analyse = ein PDF.
@@ -154,7 +154,7 @@ function loadConfig(configFile, configArgGiven) {
 }
 
 // ── SQL-Export einlesen ──────────────────────────────────────────────
-// Gibt Array von Zeilen zurück: { kuerzel, wert, geschlecht, alterTage }
+// Gibt Array von Zeilen zurück: { kuerzel, wert, geschlecht, alterTage, messplatz }
 function loadExport(exportFile) {
   const text  = fs.readFileSync(exportFile, 'utf-8');
   const lines = text.trim().split('\n');
@@ -164,12 +164,14 @@ function loadExport(exportFile) {
   const iStrerg    = headers.indexOf('strerg');
   const iGeschl    = headers.indexOf('geschlecht');
   const iAlterTage = headers.indexOf('alter_tage');
+  const iMessplatz = headers.indexOf('messplatz_kuerzel');
 
   if (iKuerzel === -1) { console.error(`Export: Spalte "kuerzel" fehlt. Spalten: ${headers.join(', ')}`); process.exit(1); }
   if (iStrerg  === -1) { console.error(`Export: Spalte "strerg" fehlt.  Spalten: ${headers.join(', ')}`); process.exit(1); }
 
   if (iGeschl    === -1) console.warn('Export: Spalte "geschlecht" fehlt — Geschlechts-Filter nicht möglich.');
   if (iAlterTage === -1) console.warn('Export: Spalte "alter_tage" fehlt — Alters-Filter nicht möglich.');
+  if (iMessplatz >= 0)   console.log('Export: Spalte "messplatz_kuerzel" erkannt — Aufteilung nach Gerät.');
 
   const rows = [];
   let skipped = 0;
@@ -188,26 +190,38 @@ function loadExport(exportFile) {
 
     const geschlecht = iGeschl    >= 0 ? p[iGeschl]?.trim().toLowerCase()    || '' : '';
     const alterTage  = iAlterTage >= 0 ? parseInt(p[iAlterTage]?.trim(), 10) : null;
+    const messplatz  = iMessplatz >= 0 ? p[iMessplatz]?.trim()               || '' : '';
 
-    rows.push({ kuerzel, wert, geschlecht, alterTage });
+    rows.push({ kuerzel, wert, geschlecht, alterTage, messplatz });
   }
 
   const nAnalyten = new Set(rows.map(r => r.kuerzel)).size;
-  console.log(`Export geladen: ${rows.length} Zeilen, ${nAnalyten} Analyt(en).${skipped ? ` (${skipped} ungültige Werte ignoriert)` : ''}`);
+  const nGeraete  = iMessplatz >= 0 ? new Set(rows.map(r => r.messplatz).filter(Boolean)).size : 0;
+  console.log(`Export geladen: ${rows.length} Zeilen, ${nAnalyten} Analyt(en)${nGeraete ? `, ${nGeraete} Gerät(e)` : ''}.${skipped ? ` (${skipped} ungültige Werte ignoriert)` : ''}`);
   return rows;
 }
 
 // ── Zeilen nach Gruppe filtern ───────────────────────────────────────
-function filterRows(rows, kuerzel, geschlecht, alterVon, alterBis) {
+function filterRows(rows, kuerzel, geschlecht, alterVon, alterBis, messplatz) {
   return rows
     .filter(r => {
       if (r.kuerzel !== kuerzel) return false;
       if (geschlecht && geschlecht !== '*' && r.geschlecht && r.geschlecht !== geschlecht) return false;
       if (alterVon != null && r.alterTage != null && r.alterTage < alterVon) return false;
       if (alterBis != null && r.alterTage != null && r.alterTage > alterBis) return false;
+      if (messplatz && r.messplatz && r.messplatz !== messplatz) return false;
       return true;
     })
     .map(r => r.wert);
+}
+
+// Alle Messplätze für ein Kürzel ermitteln
+function getMessplaetze(rows, kuerzel) {
+  const set = new Set();
+  for (const r of rows) {
+    if (r.kuerzel === kuerzel && r.messplatz) set.add(r.messplatz);
+  }
+  return [...set].sort();
 }
 
 // ── Hauptprogramm ────────────────────────────────────────────────────
@@ -241,41 +255,59 @@ async function main() {
   // ── Analysen zusammenstellen ─────────────────────────────────────
   const jobs = [];
 
-  if (configEntries) {
-    // Konfig vorhanden: eine Analyse pro Konfig-Zeile
-    for (const entry of configEntries) {
-      const values = filterRows(exportRows, entry.kuerzel, entry.geschlecht, entry.alterVon, entry.alterBis);
+  // Gibt es Messplatz-Daten im Export?
+  const hatMessplaetze = exportRows.some(r => r.messplatz);
 
-      // Anzeigename aufbauen
-      const baseName = entry.name !== entry.kuerzel
-        ? `${entry.name} (${entry.kuerzel})`
-        : entry.kuerzel;
+  // Hilfsfunktion: Jobs für ein Kürzel + Konfig-Eintrag + Messplatz-Liste erzeugen
+  function createJobs(entry, messplaetze) {
+    const baseName = entry.name !== entry.kuerzel
+      ? `${entry.name} (${entry.kuerzel})`
+      : entry.kuerzel;
 
-      const gruppenTeile = [];
-      if (entry.geschlecht && entry.geschlecht !== '*')
-        gruppenTeile.push(entry.geschlecht === 'm' ? 'Männer' : entry.geschlecht === 'w' ? 'Frauen' : entry.geschlecht);
-      const alterStr = formatAlterRange(entry.alterVon, entry.alterBis);
-      if (alterStr) gruppenTeile.push(alterStr);
+    const gruppenTeile = [];
+    if (entry.geschlecht && entry.geschlecht !== '*')
+      gruppenTeile.push(entry.geschlecht === 'm' ? 'Männer' : entry.geschlecht === 'w' ? 'Frauen' : entry.geschlecht);
+    const alterStr = formatAlterRange(entry.alterVon, entry.alterBis);
+    if (alterStr) gruppenTeile.push(alterStr);
 
-      const displayName = gruppenTeile.length
-        ? `${baseName} — ${gruppenTeile.join(', ')}`
+    const geschlSuffix = (entry.geschlecht && entry.geschlecht !== '*') ? `_${entry.geschlecht}` : '';
+    const alterSfx = alterSuffix(entry.alterVon, entry.alterBis);
+    const kuerzelSafe = entry.kuerzel.replace(/[^a-zA-Z0-9äöüÄÖÜß_\-]/g, '_');
+
+    for (const mp of messplaetze) {
+      const values = filterRows(exportRows, entry.kuerzel, entry.geschlecht, entry.alterVon, entry.alterBis, mp);
+
+      const teile = [...gruppenTeile];
+      if (mp) teile.push(`Gerät ${mp}`);
+
+      const displayName = teile.length
+        ? `${baseName} — ${teile.join(', ')}`
         : baseName;
 
-      // Dateiname: kuerzel + Gruppen-Suffix
-      const geschlSuffix = (entry.geschlecht && entry.geschlecht !== '*') ? `_${entry.geschlecht}` : '';
-      const safeName = entry.kuerzel.replace(/[^a-zA-Z0-9äöüÄÖÜß_\-]/g, '_')
-        + geschlSuffix
-        + alterSuffix(entry.alterVon, entry.alterBis);
+      const mpSuffix = mp ? `_${mp.replace(/[^a-zA-Z0-9äöüÄÖÜß_\-]/g, '_')}` : '';
+      const safeName = kuerzelSafe + geschlSuffix + alterSfx + mpSuffix;
 
       jobs.push({ displayName, safeName, unit: entry.unit, log: entry.log, values });
     }
+  }
+
+  if (configEntries) {
+    for (const entry of configEntries) {
+      // Pro Konfig-Zeile: über alle Messplätze aufteilen (oder [''] wenn keine)
+      const messplaetze = hatMessplaetze
+        ? getMessplaetze(exportRows, entry.kuerzel)
+        : [''];
+      createJobs(entry, messplaetze);
+    }
   } else {
-    // Keine Konfig: alle Kürzel ohne Filter, Kürzel als Name
+    // Keine Konfig: alle Kürzel ohne Filter
     const kuerzels = [...new Set(exportRows.map(r => r.kuerzel))].sort();
     for (const kuerzel of kuerzels) {
-      const values = exportRows.filter(r => r.kuerzel === kuerzel).map(r => r.wert);
-      const safeName = kuerzel.replace(/[^a-zA-Z0-9äöüÄÖÜß_\-]/g, '_');
-      jobs.push({ displayName: kuerzel, safeName, unit: '', log: false, values });
+      const entry = { kuerzel, name: kuerzel, unit: '', log: false, geschlecht: '', alterVon: null, alterBis: null };
+      const messplaetze = hatMessplaetze
+        ? getMessplaetze(exportRows, kuerzel)
+        : [''];
+      createJobs(entry, messplaetze);
     }
   }
 
