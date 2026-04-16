@@ -107,6 +107,66 @@ Laut CLSI EP28-A3c werden für die indirekte Methode mindestens **120 Messwerte*
 
 ---
 
+## Batch-Verarbeitung (`batch.mjs`)
+
+Der Batch-Job erzeugt automatisch PDFs (und HTML-Dateien) für alle Analyten aus einem SQL-Export.
+
+### Voraussetzung (einmalig)
+
+```bash
+npm install
+```
+
+### Aufruf
+
+```bash
+# Standardpfade: input/export.csv + input/analyten.csv → output/
+node batch.mjs
+
+# Eigene Export-Datei
+node batch.mjs export.csv
+
+# Eigene Export- und Konfig-Datei
+node batch.mjs export.csv --config=analyten.csv
+
+# Ausgabeverzeichnis festlegen
+node batch.mjs export.csv --config=analyten.csv --outdir=reports
+```
+
+| Argument | Beschreibung | Standard |
+|---|---|---|
+| `[export.csv]` | Pfad zur CSV-Exportdatei aus dem LIS | `input/export.csv` |
+| `--config=<Datei>` | Pfad zur Analyten-Konfiguration | `input/analyten.csv` |
+| `--outdir=<Verzeichnis>` | Ausgabeverzeichnis für PDFs und HTML | `output/` |
+
+### Eingabedateien
+
+**Export-CSV** (Pflicht-Spalten: `kuerzel`, `strerg`):
+```
+auftid;labordatum;geschlecht;alter_jahre;alter_tage;verfahrennr;kuerzel;strerg;messplatz_kuerzel
+10001;2024-01-15;m;45;16436;1;Na;140,2;COBAS1
+```
+
+**Analyten-Konfiguration** (`input/analyten.csv`, optional):
+```
+kuerzel;name;unit;log;geschlecht;alter_tage_von;alter_tage_bis
+Na;Natrium;mmol/L;0;;;
+Hb;Hämoglobin Männer;g/dL;0;m;;
+CRP;CRP Erwachsene;mg/L;1;;6570;
+```
+
+Ohne Konfig-Datei werden alle Kürzel aus dem Export ohne Filter und ohne Einheit verarbeitet.
+
+### Ausgabe
+
+Für jeden Analyten (je Geschlecht, Altersgruppe und Gerät) entstehen im Ausgabeverzeichnis:
+- `<kuerzel>[_m|_w][_<alter>d-<alter>d][_<gerät>].pdf`
+- gleichnamige `.html`-Datei
+
+Analyten mit weniger als 20 Messwerten werden übersprungen.
+
+---
+
 ## Technische Hinweise
 
 - **Keine Installation, keine Abhängigkeiten** — reines HTML/JavaScript, läuft im Browser
