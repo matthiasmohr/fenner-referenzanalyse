@@ -224,6 +224,117 @@ function getMessplaetze(rows, kuerzel) {
   return [...set].sort();
 }
 
+// ── Alter in Tagen → kompakter Jahres-String ─────────────────────────
+function tageZuJahre(tage) {
+  if (tage == null) return null;
+  if (tage < 28)   return `${tage} T`;
+  if (tage < 365)  return `${Math.round(tage / 30.44)} Mo`;
+  const j = tage / 365.25;
+  return (j % 1 < 0.05 || j % 1 > 0.95) ? `${Math.round(j)} J` : `${j.toFixed(1)} J`;
+}
+
+function geschlechtLabel(g) {
+  if (!g || g === '*') return 'Alle';
+  if (g === 'm' || g === 'männlich') return '♂';
+  if (g === 'w' || g === 'weiblich') return '♀';
+  return g;
+}
+
+function r2Class(r2str) {
+  const pct = parseFloat(r2str);
+  if (isNaN(pct)) return '';
+  if (pct >= 99)  return 'r2-good';
+  if (pct >= 95)  return 'r2-warn';
+  return 'r2-bad';
+}
+
+function buildIndex(outPath, rows) {
+  // Analyten in Reihenfolge ihres ersten Auftretens gruppieren
+  const groups = new Map();
+  for (const r of rows) {
+    if (!groups.has(r.kuerzel)) groups.set(r.kuerzel, { name: r.analyt, unit: r.unit, rows: [] });
+    groups.get(r.kuerzel).rows.push(r);
+  }
+
+  const tableRows = [...groups.entries()].map(([kuerzel, g]) => {
+    const dataRows = g.rows.map(r => {
+      const von  = tageZuJahre(r.alterVon);
+      const bis  = tageZuJahre(r.alterBis);
+      const alter = !von && !bis ? 'alle' : !von ? `bis ${bis}` : !bis ? `ab ${von}` : `${von} – ${bis}`;
+      const refInt = r.refLow && r.refHigh ? `${r.refLow} – ${r.refHigh}` : '–';
+      const r2c = r2Class(r.r2);
+      return `
+      <tr>
+        <td>${geschlechtLabel(r.geschlecht)}</td>
+        <td>${alter}</td>
+        <td class="num">${r.n ?? '–'}</td>
+        <td class="num">${refInt}</td>
+        <td class="num ${r2c}">${r.r2 ?? '–'}</td>
+        <td class="links">
+          <a href="${r.safeName}.html" target="_blank">HTML</a>
+          <a href="${r.safeName}.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>`;
+    }).join('');
+
+    return `
+  <section>
+    <h2>${g.name ?? kuerzel} <span class="unit">${g.unit ? `[${g.unit}]` : ''}</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>${dataRows}</tbody>
+    </table>
+  </section>`;
+  }).join('\n');
+
+  const now = new Date().toLocaleString('de-DE');
+  const html = `<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Referenzanalyse – Übersicht</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; font-size: 14px; color: #1f2937;
+         background: #f9fafb; padding: 2rem; }
+  h1   { font-size: 1.4rem; font-weight: 700; margin-bottom: .25rem; }
+  .meta { color: #6b7280; font-size: .8rem; margin-bottom: 2rem; }
+  section { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+            padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+  h2   { font-size: 1rem; font-weight: 600; margin-bottom: .75rem; }
+  .unit { font-weight: 400; color: #6b7280; font-size: .85em; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: .45rem .6rem; text-align: left; border-bottom: 1px solid #f3f4f6; }
+  th     { background: #f9fafb; font-weight: 600; font-size: .8rem;
+           text-transform: uppercase; letter-spacing: .04em; color: #6b7280; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f9fafb; }
+  .num   { text-align: right; font-variant-numeric: tabular-nums; }
+  .links { white-space: nowrap; }
+  .links a { display: inline-block; padding: .2rem .55rem; border-radius: 4px;
+             font-size: .78rem; font-weight: 600; text-decoration: none;
+             margin-right: .3rem; border: 1px solid; }
+  .links a[href$=".html"] { color: #2563eb; border-color: #bfdbfe; background: #eff6ff; }
+  .links a[href$=".pdf"]  { color: #059669; border-color: #a7f3d0; background: #ecfdf5; }
+  .links a:hover { opacity: .75; }
+  .r2-good { color: #059669; font-weight: 600; }
+  .r2-warn { color: #d97706; font-weight: 600; }
+  .r2-bad  { color: #dc2626; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Hoffmann Referenzanalyse – Übersicht</h1>
+<p class="meta">Erstellt am ${now} · ${rows.length} Gruppe(n) · ${groups.size} Analyt(en)</p>
+${tableRows}
+</body>
+</html>`;
+
+  fs.writeFileSync(path.join(outPath, 'index.html'), html, 'utf-8');
+}
+
 // ── Hauptprogramm ────────────────────────────────────────────────────
 async function main() {
   const args = process.argv.slice(2);
@@ -287,7 +398,11 @@ async function main() {
       const mpSuffix = mp ? `_${mp.replace(/[^a-zA-Z0-9äöüÄÖÜß_\-]/g, '_')}` : '';
       const safeName = kuerzelSafe + geschlSuffix + alterSfx + mpSuffix;
 
-      jobs.push({ displayName, safeName, unit: entry.unit, log: entry.log, values });
+      jobs.push({
+        displayName, safeName, unit: entry.unit, log: entry.log, values,
+        kuerzel: entry.kuerzel, analyt: entry.name,
+        geschlecht: entry.geschlecht, alterVon: entry.alterVon, alterBis: entry.alterBis
+      });
     }
   }
 
@@ -345,6 +460,7 @@ async function main() {
   });
 
   let success = 0, failed = 0;
+  const indexRows = [];
 
   for (let i = 0; i < valid.length; i++) {
     const a   = valid[i];
@@ -376,6 +492,14 @@ async function main() {
       const htmlContent = await page.content();
       fs.writeFileSync(htmlOut, htmlContent, 'utf-8');
 
+      const stats = await page.evaluate(() => {
+        const txt = id => document.getElementById(id)?.textContent?.trim() ?? '';
+        const r2El = document.getElementById('sR2');
+        const r2 = r2El?.querySelector('.badge')?.textContent?.trim() ?? r2El?.textContent?.trim() ?? '';
+        return { n: txt('sN'), r2, refLow: txt('refLow'), refHigh: txt('refHigh') };
+      });
+      indexRows.push({ ...a, ...stats });
+
       console.log(`✓ → ${a.safeName}.pdf`);
       success++;
       await page.close();
@@ -386,6 +510,11 @@ async function main() {
   }
 
   await browser.close();
+
+  if (indexRows.length > 0) {
+    buildIndex(outPath, indexRows);
+    console.log(`  Index:    ${outPath}/index.html`);
+  }
 
   console.log(`\n── Fertig ──────────────────────────`);
   console.log(`  Erfolgreich: ${success}`);
