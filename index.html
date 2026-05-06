@@ -688,29 +688,28 @@ function drawHoffmann() {
   const xMin = raw[0], xMax = raw[raw.length-1];
   const zz   = res.zz;
 
-  // Für große Datensätze: Anzeige auf max. 3000 Punkte begrenzen.
-  // Berechnung (Regression, Grenzen) läuft immer auf allen Daten.
+  // Bei Log-Transformation: x-Werte manuell in den Log-Raum bringen (lineare Achse bleibt).
+  // Das ist robuster als Chart.js type:'logarithmic', das mit Zoom/Annotation-Plugins
+  // beim toDataURL(PDF-Export) zu einem leeren Canvas führt.
+  const xc = res.logT ? v => Math.log(v) : v => v;
+
   const MAX_DISPLAY = 10000;
   const step = raw.length > MAX_DISPLAY ? Math.ceil(raw.length / MAX_DISPLAY) : 1;
   const inside  = [], outside = [];
   for (let i = 0; i < raw.length; i += step) {
-    const pt = { x: raw[i], y: zz[i] };
+    const pt = { x: xc(raw[i]), y: zz[i] };
     if (i >= res.lo && i < res.hi) inside.push(pt); else outside.push(pt);
   }
 
-  // Regressionsgerade/-kurve auf voller Breite.
-  // Bei Log-Transformation ist z = a + b·log(x) auf der Original-Skala
-  // eine Kurve — daher viele Stützpunkte statt nur 2 Endpunkte.
-  const nSeg = res.logT ? 300 : 2;
-  const fitLine = Array.from({length: nSeg}, (_, i) => {
-    const x   = xMin + (i / (nSeg - 1)) * (xMax - xMin);
-    const xTr = res.logT ? Math.log(x) : x;
-    return { x, y: res.a + res.b * xTr };
-  });
+  // z = a + b·log(x) ist auf der log-transformierten x-Achse eine Gerade → 2 Punkte.
+  const fitLine = [
+    { x: xc(xMin), y: res.a + res.b * (res.logT ? Math.log(xMin) : xMin) },
+    { x: xc(xMax), y: res.a + res.b * (res.logT ? Math.log(xMax) : xMax) }
+  ];
 
   // ±1,96 SD Hilfslinien
-  const hLo = [{x:xMin,y:-1.96},{x:xMax,y:-1.96}];
-  const hHi = [{x:xMin,y: 1.96},{x:xMax,y: 1.96}];
+  const hLo = [{x:xc(xMin),y:-1.96},{x:xc(xMax),y:-1.96}];
+  const hHi = [{x:xc(xMin),y: 1.96},{x:xc(xMax),y: 1.96}];
 
   gHoffChart = new Chart(ctx, {
     type: 'scatter',
@@ -758,18 +757,21 @@ function drawHoffmann() {
         annotation: {
           annotations: {
             refLo: {
-              type:'line', scaleID:'x', value: res.lowerLimit,
+              type:'line', scaleID:'x', value: xc(res.lowerLimit),
               borderColor:'rgba(234,88,12,0.0)', borderWidth:0  // unsichtbar – Griff übernimmt
             },
             refHi: {
-              type:'line', scaleID:'x', value: res.upperLimit,
+              type:'line', scaleID:'x', value: xc(res.upperLimit),
               borderColor:'rgba(234,88,12,0.0)', borderWidth:0
             }
           }
         },
         tooltip: {
           callbacks: {
-            label: c => `x=${fmt(c.parsed.x,3)}, z=${fmt(c.parsed.y,3)}`
+            label: c => {
+              const xOrig = res.logT ? Math.exp(c.parsed.x) : c.parsed.x;
+              return `x=${fmt(xOrig,3)}, z=${fmt(c.parsed.y,3)}`;
+            }
           }
         },
         zoom: {
@@ -787,7 +789,12 @@ function drawHoffmann() {
         }
       },
       scales: {
-        x: { title:{ display:true, text: gName+(gUnit?' ('+gUnit+')':'') } },
+        x: {
+          title:{ display:true, text: gName+(gUnit?' ('+gUnit+')':'') },
+          ticks: res.logT ? {
+            callback: v => fmt(Math.exp(v), Math.exp(v) < 10 ? 2 : 0)
+          } : {}
+        },
         y: {
           title: { display:true, text:'Normales Quantil (z)' },
           ticks: {
@@ -925,18 +932,19 @@ function drawDetail() {
   const ctx = document.getElementById('detailCanvas').getContext('2d');
   const raw = res.sortedRaw, zz = res.zz;
 
+  // Bei Log-Transformation: x manuell in log-Raum (lineare Achse bleibt, verhindert PDF-Bug)
+  const xc = res.logT ? v => Math.log(v) : v => v;
+
   // Nur die Punkte im Anpassungsbereich
   const pts = [];
-  for (let i = res.lo; i < res.hi; i++) pts.push({ x: raw[i], y: zz[i] });
+  for (let i = res.lo; i < res.hi; i++) pts.push({ x: xc(raw[i]), y: zz[i] });
 
-  // Regressionslinie über Anpassungsbereich
+  // Regressionslinie: 2 Punkte genügen (in log-Raum linear)
   const xLo = raw[res.lo], xHi = raw[res.hi - 1];
-  const nSeg = res.logT ? 200 : 2;
-  const fitLine = Array.from({length: nSeg}, (_, i) => {
-    const x   = xLo + (i / (nSeg - 1)) * (xHi - xLo);
-    const xTr = res.logT ? Math.log(x) : x;
-    return { x, y: res.a + res.b * xTr };
-  });
+  const fitLine = [
+    { x: xc(xLo), y: res.a + res.b * (res.logT ? Math.log(xLo) : xLo) },
+    { x: xc(xHi), y: res.a + res.b * (res.logT ? Math.log(xHi) : xHi) }
+  ];
 
   // Referenzgrenzen als vertikale Markierung via Annotation
   gDetailChart = new Chart(ctx, {
@@ -964,13 +972,13 @@ function drawDetail() {
         annotation: {
           annotations: {
             refLoLine: {
-              type: 'line', scaleID: 'x', value: res.lowerLimit,
+              type: 'line', scaleID: 'x', value: xc(res.lowerLimit),
               borderColor: 'rgba(22,163,74,0.8)', borderWidth: 2, borderDash: [5,4],
               label: { display: true, content: fmt(res.lowerLimit) + (gUnit?' '+gUnit:''),
                        position: 'start', font: { size: 10 } }
             },
             refHiLine: {
-              type: 'line', scaleID: 'x', value: res.upperLimit,
+              type: 'line', scaleID: 'x', value: xc(res.upperLimit),
               borderColor: 'rgba(22,163,74,0.8)', borderWidth: 2, borderDash: [5,4],
               label: { display: true, content: fmt(res.upperLimit) + (gUnit?' '+gUnit:''),
                        position: 'start', font: { size: 10 } }
@@ -987,7 +995,10 @@ function drawDetail() {
         }
       },
       scales: {
-        x: { title: { display: true, text: gName + (gUnit ? ' (' + gUnit + ')' : '') } },
+        x: {
+          title: { display: true, text: gName + (gUnit ? ' (' + gUnit + ')' : '') },
+          ticks: res.logT ? { callback: v => fmt(Math.exp(v), Math.exp(v) < 10 ? 2 : 0) } : {}
+        },
         y: { title: { display: true, text: 'Normales Quantil (z)' } }
       }
     }
@@ -1011,9 +1022,10 @@ function positionHandles() {
   // Pixel-Positionen der aktuellen Grenzen des Anpassungsbereichs
   const loData = gRes.sortedRaw[gRes.lo];
   const hiData = gRes.sortedRaw[gRes.hi - 1];
+  const xcPos = gRes.logT ? v => Math.log(v) : v => v;
 
-  const pxLo = xScale.getPixelForValue(loData);
-  const pxHi = xScale.getPixelForValue(hiData);
+  const pxLo = xScale.getPixelForValue(xcPos(loData));
+  const pxHi = xScale.getPixelForValue(xcPos(hiData));
 
   const hL = document.getElementById('handleLeft');
   const hR = document.getElementById('handleRight');
@@ -1055,7 +1067,9 @@ function onDrag(e) {
 
   // Mausposition relativ zum Canvas
   const canvasPx = e.clientX - rect.left;
-  const dataVal  = xScale.getValueForPixel(canvasPx);
+  const rawVal   = xScale.getValueForPixel(canvasPx);
+  // Achse zeigt log(x) bei logT → zurücktransformieren für Vergleich mit rawArr
+  const dataVal  = gRes.logT ? Math.exp(rawVal) : rawVal;
 
   // Finde nächsten Datenpunkt
   const rawArr = gRes.sortedRaw;

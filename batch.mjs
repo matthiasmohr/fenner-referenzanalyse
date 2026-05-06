@@ -248,7 +248,7 @@ function r2Class(r2str) {
   return 'r2-bad';
 }
 
-function buildIndex(outPath, rows) {
+function buildIndex(outPath, rows, skipped = []) {
   // Analyten in Reihenfolge ihres ersten Auftretens gruppieren
   const groups = new Map();
   for (const r of rows) {
@@ -263,6 +263,9 @@ function buildIndex(outPath, rows) {
       const alter = !von && !bis ? 'alle' : !von ? `bis ${bis}` : !bis ? `ab ${von}` : `${von} – ${bis}`;
       const refInt = r.refLow && r.refHigh ? `${r.refLow} – ${r.refHigh}` : '–';
       const r2c = r2Class(r.r2);
+      const logBadge = r.log
+        ? `<span class="badge-log log1" title="Logarithmische Transformation">log</span>`
+        : `<span class="badge-log log0" title="Lineare Skala">lin</span>`;
       return `
       <tr>
         <td>${geschlechtLabel(r.geschlecht)}</td>
@@ -270,6 +273,7 @@ function buildIndex(outPath, rows) {
         <td class="num">${r.n ?? '–'}</td>
         <td class="num">${refInt}</td>
         <td class="num ${r2c}">${r.r2 ?? '–'}</td>
+        <td>${logBadge}</td>
         <td class="links">
           <a href="${r.safeName}.html" target="_blank">HTML</a>
           <a href="${r.safeName}.pdf"  target="_blank">PDF</a>
@@ -283,12 +287,49 @@ function buildIndex(outPath, rows) {
     <table>
       <thead><tr>
         <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
-        <th>Referenzintervall</th><th>R²</th><th>Dateien</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
       </tr></thead>
       <tbody>${dataRows}</tbody>
     </table>
   </section>`;
   }).join('\n');
+
+  // Übersprungene Analysen
+  let skippedSection = '';
+  if (skipped.length > 0) {
+    // Auch übersprungene nach Analyt gruppieren
+    const skipGroups = new Map();
+    for (const r of skipped) {
+      if (!skipGroups.has(r.kuerzel)) skipGroups.set(r.kuerzel, { name: r.analyt, unit: r.unit, rows: [] });
+      skipGroups.get(r.kuerzel).rows.push(r);
+    }
+
+    const skipRows = [...skipGroups.entries()].map(([, g]) => {
+      return g.rows.map(r => {
+        const von  = tageZuJahre(r.alterVon);
+        const bis  = tageZuJahre(r.alterBis);
+        const alter = !von && !bis ? 'alle' : !von ? `bis ${bis}` : !bis ? `ab ${von}` : `${von} – ${bis}`;
+        return `
+        <tr>
+          <td>${g.name ?? r.kuerzel}</td>
+          <td>${geschlechtLabel(r.geschlecht)}</td>
+          <td>${alter}</td>
+          <td class="skip-reason">${r.skipReason}</td>
+        </tr>`;
+      }).join('');
+    }).join('');
+
+    skippedSection = `
+  <section class="skipped-section">
+    <h2>⚠ Übersprungene Analysen <span class="skip-count">${skipped.length}</span></h2>
+    <table>
+      <thead><tr>
+        <th>Analyt</th><th>Geschlecht</th><th>Altersgruppe</th><th>Grund</th>
+      </tr></thead>
+      <tbody>${skipRows}</tbody>
+    </table>
+  </section>`;
+  }
 
   const now = new Date().toLocaleString('de-DE');
   const html = `<!DOCTYPE html>
@@ -323,12 +364,23 @@ function buildIndex(outPath, rows) {
   .r2-good { color: #059669; font-weight: 600; }
   .r2-warn { color: #d97706; font-weight: 600; }
   .r2-bad  { color: #dc2626; font-weight: 600; }
+  .badge-log { display: inline-block; padding: .1rem .4rem; border-radius: 3px;
+               font-size: .75rem; font-weight: 600; }
+  .log1 { background: #fef3c7; color: #92400e; }
+  .log0 { background: #f3f4f6; color: #6b7280; }
+  .skipped-section { border-color: #fcd34d; background: #fffbeb; }
+  .skipped-section h2 { color: #92400e; }
+  .skip-count { display: inline-block; background: #fcd34d; color: #78350f;
+                border-radius: 9999px; padding: 0 .5rem; font-size: .75rem;
+                margin-left: .4rem; vertical-align: middle; }
+  .skip-reason { color: #b45309; font-size: .85em; }
 </style>
 </head>
 <body>
 <h1>Hoffmann Referenzanalyse – Übersicht</h1>
-<p class="meta">Erstellt am ${now} · ${rows.length} Gruppe(n) · ${groups.size} Analyt(en)</p>
+<p class="meta">Erstellt am ${now} · ${rows.length} Gruppe(n) · ${groups.size} Analyt(en)${skipped.length ? ` · ${skipped.length} übersprungen` : ''}</p>
 ${tableRows}
+${skippedSection}
 </body>
 </html>`;
 
@@ -428,9 +480,11 @@ async function main() {
 
   // Zu wenige Werte aussortieren
   const valid = [];
+  const skipped = [];
   for (const job of jobs) {
     if (job.values.length < 20) {
       console.warn(`"${job.displayName}": Nur ${job.values.length} Werte — übersprungen (min. 20)`);
+      skipped.push({ ...job, skipReason: `Nur ${job.values.length} Werte (min. 20 erforderlich)` });
     } else {
       valid.push(job);
     }
@@ -512,7 +566,7 @@ async function main() {
   await browser.close();
 
   if (indexRows.length > 0) {
-    buildIndex(outPath, indexRows);
+    buildIndex(outPath, indexRows, skipped);
     console.log(`  Index:    ${outPath}/index.html`);
   }
 
