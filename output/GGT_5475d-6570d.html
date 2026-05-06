@@ -1,0 +1,1251 @@
+<!DOCTYPE html><html lang="de"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hoffmann Referenzbereich-Analyse</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f4f8; color: #1a202c; margin: 0; padding: 20px; font-size: 14px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    header {
+      background: #1e3a5f; color: white;
+      padding: 18px 28px; border-radius: 10px; margin-bottom: 18px;
+    }
+    header h1 { margin: 0 0 4px; font-size: 1.5rem; }
+    header p  { margin: 0; opacity: 0.75; font-size: 0.85rem; }
+
+    .card {
+      background: white; border-radius: 10px;
+      padding: 22px 24px; box-shadow: 0 1px 4px rgba(0,0,0,.10); margin-bottom: 18px;
+    }
+    .card h2 {
+      margin: 0 0 14px; font-size: 1rem; font-weight: 700; color: #1e3a5f;
+      border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;
+    }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .full { grid-column: 1 / -1; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    label { font-size: .82rem; font-weight: 600; color: #4a5568; }
+
+    input[type="text"], input[type="number"], textarea {
+      padding: 7px 11px; border: 1px solid #cbd5e0; border-radius: 6px;
+      font-size: .88rem; outline: none; width: 100%;
+    }
+    input:focus, textarea:focus {
+      border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.10);
+    }
+    textarea {
+      min-height: 110px; resize: vertical;
+      font-family: 'Courier New', monospace; font-size: .82rem;
+    }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+    .checkbox-row input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; }
+    .checkbox-row label { cursor: pointer; font-weight: 500; }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+    button {
+      padding: 9px 18px; border: none; border-radius: 6px;
+      font-size: .88rem; font-weight: 600; cursor: pointer; transition: filter .15s;
+    }
+    button:hover { filter: brightness(.92); }
+    .btn-primary   { background: #2563eb; color: white; }
+    .btn-secondary { background: #e2e8f0; color: #374151; }
+    .btn-success   { background: #15803d; color: white; }
+    .btn-warn      { background: #d97706; color: white; }
+
+    .alert { padding: 10px 14px; border-radius: 6px; font-size: .85rem; margin-top: 10px; }
+    .alert-error { background: #fee2e2; border: 1px solid #ef4444; color: #7f1d1d; }
+    .alert-warn  { background: #fef3c7; border: 1px solid #f59e0b; color: #78350f; }
+    .alert-info  { background: #dbeafe; border: 1px solid #3b82f6; color: #1e3a5f; }
+
+    .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+    table.stat { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    table.stat th, table.stat td { padding: 7px 10px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+    table.stat th { background: #f7fafc; font-weight: 600; color: #4a5568; }
+    table.stat tr:last-child td { border-bottom: none; }
+
+    .ref-box {
+      background: #dbeafe; border: 2px solid #2563eb;
+      border-radius: 10px; padding: 18px; text-align: center;
+    }
+    .ref-box .lbl  { font-size: .82rem; color: #4a5568; margin-bottom: 8px; }
+    .ref-box .val  { font-size: 2rem; font-weight: 800; color: #1e3a5f; line-height: 1.1; }
+    .ref-box .unit { font-size: .95rem; color: #4a5568; margin-top: 4px; }
+    .ref-box .formula { margin-top: 10px; font-size: .8rem; color: #374151; }
+    .ref-box code {
+      font-size: .88rem; color: #2563eb;
+      background: rgba(37,99,235,.08); padding: 2px 6px; border-radius: 4px;
+    }
+
+    .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .78rem; font-weight: 700; }
+    .badge-good { background: #d1fae5; color: #065f46; }
+    .badge-ok   { background: #fef3c7; color: #92400e; }
+    .badge-bad  { background: #fee2e2; color: #7f1d1d; }
+
+    /* ── Hoffmann-Plot Container mit interaktiven Griffen ── */
+    .plot-container {
+      position: relative;
+      user-select: none;
+    }
+    .chart-wrap      { position: relative; height: 360px; }
+    .chart-wrap-tall { height: 720px; }
+
+    /* Drag-Griffe werden per JS positioniert */
+    .drag-handle {
+      position: absolute; top: 0; width: 12px;
+      cursor: ew-resize; z-index: 10;
+      transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .drag-handle .handle-bar {
+      width: 4px; height: 720px;
+      background: rgba(234,88,12,0.85);
+      border-radius: 2px;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.6);
+    }
+    .drag-handle .handle-knob {
+      position: absolute; top: 50%;
+      width: 20px; height: 28px;
+      background: rgba(234,88,12,0.9);
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 11px; font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
+      transform: translateY(-50%);
+    }
+
+    .drag-hint {
+      font-size: .78rem; color: #6b7280; margin-top: 5px; text-align: center;
+    }
+
+    .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+    .footnote {
+      font-size: .78rem; color: #6b7280;
+      border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 12px;
+    }
+    .hidden { display: none !important; }
+
+    /* ── Print ── */
+    /* ── Print: Canvas → statisches Bild ──
+       Chart.js-Canvases ignorieren CSS-Layout beim Drucken.
+       Lösung: beforeprint wandelt sie in <img> um, afterprint räumt auf.
+       Damit funktioniert normaler Dokumentfluss, Höhe, Seitenumbruch. */
+    .print-chart-img { display: none; }
+    /* Print-only: off-screen statt display:none, damit Canvas rendern kann */
+    .print-only { position: absolute; left: -9999px; overflow: hidden; }
+
+    @media print {
+      body { background: white; padding: 0; font-size: 11px; }
+      .no-print { display: none !important; }
+      header {
+        background: #1e3a5f !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        padding: 12px 20px; margin-bottom: 10px;
+      }
+      header h1 { font-size: 1.2rem; }
+      header p  { font-size: 0.75rem; }
+
+      .card {
+        box-shadow: none; border: 1px solid #ccc;
+        page-break-inside: avoid;
+        padding: 12px 16px; margin-bottom: 10px;
+      }
+      .card h2 { font-size: 0.85rem; margin-bottom: 8px; padding-bottom: 5px; }
+
+      /* Interaktive Elemente weg */
+      .plot-container { position: static; }
+      .drag-handle, .drag-hint { display: none !important; }
+
+      /* Canvas verstecken, statisches Bild zeigen */
+      canvas { display: none !important; }
+      .print-chart-img { display: block !important; height: auto; }
+      .chart-wrap, .chart-wrap-tall { height: auto; position: static; }
+
+      /* ── ALLES AUF EINE SEITE ──
+         A4 nutzbar ≈ 980px. Budget:
+           Header          50px
+           Hoffmann-Plot  380px  (Bild max 340px + Titel/Legende)
+           Kennzahlen     200px  (Tabelle + Referenzbox nebeneinander)
+           Histogramm     280px  (Bild max 230px + Titel/Legende)
+           Fußnote         30px
+           ─────────────  940px  ✓ passt
+      */
+      #hoffmannCard .print-chart-img { max-height: 340px; width: 100%; }
+      #histCard .print-chart-img     { max-height: 230px; width: auto; max-width: 100%; }
+
+      /* KEIN Seitenumbruch */
+      #hoffmannCard { page-break-after: auto; break-after: auto; }
+
+      /* Kompakte Kennzahlen */
+      table.stat th, table.stat td { padding: 2px 6px; font-size: 0.72rem; }
+      .results-grid { gap: 8px; }
+
+      .ref-box { padding: 8px 10px; }
+      .ref-box .lbl  { font-size: 0.68rem; margin-bottom: 2px; }
+      .ref-box .val  { font-size: 1.2rem; }
+      .ref-box .unit { font-size: 0.75rem; margin-top: 2px; }
+      .ref-box .formula { margin-top: 4px; font-size: 0.65rem; }
+      .ref-box code { font-size: 0.68rem; }
+
+      .print-only { position: static !important; left: auto !important; }
+      #detailCard .print-chart-img { max-height: 200px; width: auto; max-width: 100%; }
+
+      .alert { padding: 4px 6px; font-size: 0.68rem; margin-top: 4px; }
+      .footnote { font-size: 0.62rem; margin-top: 4px; padding-top: 4px; }
+
+      /* Print-Header minimal */
+      #printOnlyHeader { padding: 6px 12px; margin-bottom: 6px; }
+      #printOnlyHeader div { font-size: 0.7rem; }
+    }
+    @media (max-width: 700px) {
+      .form-grid, .results-grid, .charts-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Hoffmann Referenzbereich-Analyse</h1>
+    <p>Schätzung von Referenzintervallen nach Hoffmann aus Routinelabordaten — Hoffmann RG, JAMA 185(11):864–873, 1963</p>
+  </header>
+
+  <!-- Eingabe -->
+  <div class="card no-print" id="inputCard">
+    <h2>Dateneingabe</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="analyteName">Analyt / Parameter</label>
+        <input type="text" id="analyteName" placeholder="z.B. Natrium, Glukose, TSH …">
+      </div>
+      <div class="form-group">
+        <label for="analyteUnit">Einheit</label>
+        <input type="text" id="analyteUnit" placeholder="z.B. mmol/L, mg/dL, mU/L …">
+      </div>
+      <div class="form-group full">
+        <label for="dataInput">Messwerte — komma-, semikolon-, leerzeichen- oder zeilengetrennt</label>
+        <textarea id="dataInput" placeholder="135.2, 141.7, 138.4, 143.0, 137.8 …
+oder eine Zahl pro Zeile"></textarea>
+      </div>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="logTransform">
+      <label for="logTransform">Log-Transformation (für rechtsschiefe / log-normalverteilte Analyte)</label>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="runAnalysis()">▶ Analyse starten</button>
+      <button class="btn-secondary" onclick="loadExample()">Beispieldaten</button>
+      <button class="btn-secondary" onclick="clearAll()">Löschen</button>
+    </div>
+    <div id="errorMsg" class="hidden alert alert-error"></div>
+  </div>
+
+  <!-- Ergebnisse -->
+  <div id="resultsSection" class="">
+
+    <!-- Print-Kopf -->
+    <div class="card" id="printOnlyHeader" style="display: block;">
+      <div style="display:flex; justify-content:space-between; align-items:start;">
+        <div>
+          <div style="font-size:1.2rem; font-weight:700;" id="printTitle">Gamma - GT (GGT) — 15 Jahre – 18 Jahre (U/l)</div>
+          <div style="color:#6b7280; font-size:.82rem; margin-top:3px;" id="printFilter">Gruppe: 15 Jahre – 18 Jahre</div>
+          <div style="color:#6b7280; font-size:.82rem; margin-top:1px;" id="printMeta">Erstellt am 6.5.2026, 22:30:23 · n = 3186 Messwerte</div>
+        </div>
+        <div style="text-align:right; font-size:.78rem; color:#6b7280;">
+          Methode: Hoffmann-Verfahren (1963)<br>
+          Hoffmann RG. JAMA 185(11):864–873
+        </div>
+      </div>
+    </div>
+
+    <!-- Hoffmann-Plot (primäres Werkzeug) -->
+    <div class="card" id="hoffmannCard">
+      <h2 id="hoffmannTitle">Hoffmann-Plot: Gamma - GT (GGT) — 15 Jahre – 18 Jahre (U/l)</h2>
+
+      <div class="plot-container" id="plotContainer">
+        <div class="chart-wrap chart-wrap-tall">
+          <canvas id="hoffmannCanvas" width="712" height="720" style="display: block; box-sizing: border-box; touch-action: none; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); height: 720px; width: 712px;"></canvas>
+        </div>
+        <!-- Drag-Griffe werden per JS eingefügt -->
+        <div id="handleLeft" class="drag-handle" style="left: 197.443px;">
+          <div class="handle-bar"></div>
+          <div class="handle-knob">↔</div>
+        </div>
+        <div id="handleRight" class="drag-handle" style="left: 294.3px;">
+          <div class="handle-bar"></div>
+          <div class="handle-knob">↔</div>
+        </div>
+      </div>
+
+      <div class="drag-hint no-print">
+        Orangene Grenzlinien ziehen zum Verfeinern der Auswahl &nbsp;·&nbsp;
+        <button class="btn-warn" style="padding:4px 10px; font-size:.8rem;" onclick="reAutoDetect()">⟳ Neu auto-detektieren</button>
+        &nbsp;·&nbsp;
+        <button class="btn-warn" style="padding:4px 10px; font-size:.8rem;" onclick="gHoffChart &amp;&amp; gHoffChart.resetZoom()">↺ Zoom zurücksetzen</button>
+      </div>
+
+      <div class="chart-legend" style="font-size:.77rem; color:#6b7280; margin-top:6px;">
+        <span style="display:inline-block; width:12px; height:3px; background:#2563eb; vertical-align:middle; margin-right:4px;"></span> Anpassungsbereich &nbsp;
+        <span style="display:inline-block; width:12px; height:3px; background:rgba(148,163,184,0.7); vertical-align:middle; margin-right:4px;"></span> Ausgeschlossene Werte &nbsp;
+        <span style="display:inline-block; width:12px; height:3px; background:rgba(220,38,38,0.85); vertical-align:middle; margin-right:4px;"></span> Regressionsgerade &nbsp;
+        <span style="display:inline-block; width:12px; height:3px; border-top:2px dashed rgba(22,163,74,0.8); vertical-align:middle; margin-right:4px;"></span> ±1,96 SD
+      </div>
+    </div>
+
+    <!-- Kennzahlen + Referenzintervall -->
+    <div class="card">
+      <h2 id="resultTitle">Ergebnisse: Gamma - GT (GGT) — 15 Jahre – 18 Jahre (U/l)</h2>
+      <div class="results-grid">
+        <div>
+          <table class="stat">
+            <tbody><tr><th colspan="2">Deskriptive Statistik (Rohdaten)</th></tr>
+            <tr><td>Anzahl Messwerte (n)</td><td id="sN">3186</td></tr>
+            <tr><td>Minimum</td><td id="sMin">3,00 U/l</td></tr>
+            <tr><td>Maximum</td><td id="sMax">518,00 U/l</td></tr>
+            <tr><td>Median</td><td id="sMedian">18,00 U/l</td></tr>
+            <tr><th colspan="2">Hoffmann-Schätzung (Gauß-Kern)</th></tr>
+            <tr><td>Geschätzter Mittelwert (μ)</td><td id="sMean">17,78 U/l (geom.)</td></tr>
+            <tr><td>Geschätzte Standardabweichung (σ)</td><td id="sSD">1,461 (geom. SD, Faktor)</td></tr>
+            <tr><td>Variationskoeffizient (CV%)</td><td id="sCV">13,17 % (log-Skala)</td></tr>
+            <tr><td>Anpassungsgüte (R²)</td><td id="sR2"><span class="badge badge-good">99.2%</span></td></tr>
+            <tr><td>Verwendeter Bereich</td><td id="sRange">2390 von 3186 Werten (5.1 % – 80.1 %)</td></tr>
+          </tbody></table>
+        </div>
+        <div>
+          <div class="ref-box">
+            <div class="lbl">Referenzintervall &nbsp;(2,5. – 97,5. Perzentile)</div>
+            <div class="val"><span id="refLow">8,46</span> – <span id="refHigh">37,36</span></div>
+            <div class="unit" id="refUnit">U/l</div>
+            <div class="formula">
+              Regression: <code id="regFormula">z = 2,63867·x -7,59386</code><br>
+              <span style="color:#374151; font-size:.78rem;">
+                x<sub>2,5%</sub> = (−1,96 − a) / b   x<sub>97,5%</sub> = (1,96 − a) / b
+              </span>
+            </div>
+          </div>
+          <div id="warnArea" style="margin-top:10px;"></div>
+        </div>
+      </div>
+      <div class="footnote" id="methodNote"><strong>Methode:</strong> Das Hoffmann-Verfahren identifiziert im Wahrscheinlichkeitsnetz den linearen Abschnitt
+    der kumulierten Häufigkeitsverteilung als Gauß-Kern der Referenzpopulation. Die Auto-Detektion findet diesen
+    Abschnitt durch iteratives Trimmen: von beiden Rändern werden Punkte entfernt, solange die Linearität (R²) zunimmt —
+    analog zum visuellen Anlegen einer Geraden im klassischen Verfahren. Die Grenzen können anschließend per Drag
+    verfeinert werden. Plotting-Positionen nach Blom: <em>p<sub>i</sub> = (i − 0,375) / (n + 0,25)</em>.</div>
+    </div>
+
+    <!-- Histogramm -->
+    <div class="card" id="histCard">
+      <h2>Häufigkeitsverteilung</h2>
+      <div class="chart-wrap"><canvas id="histCanvas" width="712" height="360" style="display: block; box-sizing: border-box; touch-action: auto; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); height: 360px; width: 712px;"></canvas></div>
+      <div style="font-size:.77rem; color:#6b7280; margin-top:6px;">
+        Blau: innerhalb Referenzintervall · Kurve: geschätzte Normalverteilung · Linien: Referenzgrenzen
+      </div>
+    </div>
+
+    <!-- Print-only: Detailansicht Anpassungsbereich -->
+    <div class="card print-only" id="detailCard" style="">
+      <h2 id="detailTitle">Anpassungsbereich (Detail): Gamma - GT (GGT) — 15 Jahre – 18 Jahre (U/l)</h2>
+      <div class="chart-wrap" style="height:280px;">
+        <canvas id="detailCanvas" width="581" height="280" style="display: block; box-sizing: border-box; touch-action: auto; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); height: 280px; width: 581px;"></canvas>
+      </div>
+      <div style="font-size:.72rem; color:#6b7280; margin-top:4px;">
+        Nur der für die Regression verwendete lineare Abschnitt.
+        Grün gestrichelt: Referenzgrenzen bei ±1,96 SD.
+      </div>
+    </div>
+
+    <!-- Originaldaten (versteckt, für Reproduzierbarkeit im gespeicherten HTML) -->
+    <div id="originalData" style="display:none;">{"name":"Gamma - GT (GGT) — 15 Jahre – 18 Jahre","unit":"U/l","log":true,"values":[37,68,408,27,41,19,13,14,11,395,33,380,10,9,10,18,13,11,12,10,16,41,21,15,21,15,21,16,17,18,16,25,21,330,12,11,23,24,20,13,16,16,7,8,22,41,6,11,29,14,8,14,12,14,16,18,30,22,31,15,12,11,32,49,41,16,67,10,7,20,17,13,82,7,5,21,17,32,13,36,10,16,14,15,8,18,19,13,30,14,29,16,16,20,21,15,12,14,16,21,28,12,9,12,22,30,19,15,14,18,11,10,12,15,16,15,14,10,9,8,12,30,18,14,43,18,20,10,12,13,32,13,23,14,19,20,16,16,18,16,20,16,19,17,19,33,22,20,27,15,12,12,27,23,12,23,11,17,10,20,59,37,23,17,25,20,121,61,11,49,16,10,14,10,16,14,18,12,17,21,10,27,15,10,52,12,37,67,11,9,6,9,19,22,22,17,18,22,18,15,20,22,15,15,4,16,19,21,24,64,12,49,8,23,19,11,18,22,10,16,12,24,92,25,17,15,8,31,12,10,14,242,120,17,17,17,28,11,128,14,18,42,21,30,10,102,10,10,13,24,18,18,8,15,20,30,21,18,33,95,14,8,11,25,8,15,12,22,15,14,16,14,33,23,20,11,12,10,27,21,14,16,32,20,61,23,21,10,11,18,19,14,8,12,26,25,24,12,13,12,10,12,23,11,12,103,12,18,30,76,17,41,9,13,13,22,21,14,27,94,17,15,15,15,14,14,15,17,18,19,10,13,17,11,13,13,22,17,18,22,18,15,38,17,15,17,16,187,21,13,15,14,11,32,14,12,7,173,23,177,25,13,21,11,41,16,14,11,10,11,20,19,18,17,12,14,15,10,11,11,18,518,16,15,15,27,74,12,17,23,14,19,17,17,13,18,24,422,27,25,14,21,12,20,22,28,12,22,13,9,8,15,23,11,9,257,432,19,68,37,11,6,14,196,10,17,11,21,41,33,15,18,20,19,24,28,13,8,18,18,19,13,17,21,20,19,20,14,22,29,162,15,29,36,53,36,10,25,17,18,21,14,16,16,15,7,20,26,10,14,36,20,31,28,21,27,184,17,12,41,6,13,13,12,9,26,16,29,20,22,21,24,7,21,27,242,19,12,12,21,18,13,14,19,276,18,11,15,24,12,9,11,35,55,10,16,15,23,18,13,12,201,12,16,12,18,11,13,13,18,161,11,25,14,14,8,7,8,9,10,12,20,19,14,17,21,33,14,13,7,318,12,15,12,11,13,15,14,19,18,25,19,11,14,11,17,14,30,14,20,17,19,282,11,117,21,14,14,32,8,12,22,11,113,10,24,11,13,14,11,23,16,27,219,12,11,21,19,24,19,13,19,12,17,7,16,26,14,16,19,11,14,23,12,10,17,16,17,46,11,19,27,18,22,12,21,9,12,20,11,36,18,32,26,10,15,16,15,30,11,16,17,13,18,69,16,20,14,15,19,13,17,14,9,18,19,12,16,20,14,18,21,18,16,15,14,15,12,18,8,28,14,12,10,17,30,82,20,19,15,17,20,15,17,22,12,11,16,16,197,47,23,8,10,19,12,17,19,15,16,11,11,43,16,18,153,18,11,14,39,24,17,28,7,23,16,7,17,14,15,12,14,16,20,12,8,22,23,17,11,18,24,26,13,14,18,14,40,14,9,13,31,12,22,40,10,8,140,14,14,25,14,15,12,13,28,12,11,59,13,12,16,19,18,28,32,134,112,36,8,90,13,11,50,13,15,101,26,12,7,29,28,78,54,17,20,13,9,3,14,12,14,7,13,14,5,12,27,9,11,31,15,72,19,11,35,14,20,13,9,71,84,23,14,11,17,13,17,19,16,10,10,21,14,9,14,19,19,18,28,18,26,23,17,14,14,24,10,15,12,19,13,16,21,18,22,59,12,14,18,22,21,11,16,29,14,9,11,13,13,18,8,17,26,11,15,16,17,21,6,14,10,23,21,59,14,16,11,13,21,14,38,17,23,16,20,21,20,12,11,29,15,17,14,18,14,21,40,18,17,20,22,29,13,15,7,60,8,20,26,28,11,8,13,12,16,15,19,21,18,18,23,19,46,11,9,15,79,12,17,11,24,18,25,21,22,3,16,14,17,46,19,25,13,24,11,25,17,15,14,32,15,16,17,11,12,16,19,20,28,6,10,9,25,11,13,49,11,11,16,15,47,12,20,14,15,23,13,19,19,22,17,22,8,22,14,13,9,20,9,19,16,23,14,19,10,16,100,12,10,13,22,20,14,25,44,12,14,22,14,11,23,17,11,18,23,16,21,14,102,13,15,21,25,26,31,20,47,29,15,9,29,140,17,69,21,25,41,55,106,13,31,20,77,14,15,8,15,22,17,19,7,23,14,16,20,11,44,9,10,13,45,21,44,16,89,10,17,96,12,20,15,14,17,14,20,17,14,25,22,17,10,17,11,37,13,10,9,20,18,23,14,149,23,11,37,21,38,11,223,18,20,18,20,17,58,13,7,6,13,14,27,20,14,114,15,11,11,18,15,13,267,17,10,12,18,24,69,11,35,14,13,18,10,21,43,6,12,51,64,19,72,33,13,19,49,60,67,15,69,16,20,11,21,42,40,47,23,16,13,9,22,30,21,20,15,23,25,22,17,20,10,59,26,48,13,11,13,51,10,19,21,20,11,25,17,20,17,15,12,14,13,69,15,14,6,18,14,10,8,20,14,40,18,15,48,10,13,14,10,11,38,16,6,11,12,18,9,25,18,17,19,6,18,42,20,19,11,14,22,20,29,21,13,12,40,13,9,28,13,16,12,17,15,8,14,13,18,16,13,11,12,7,15,36,52,15,19,20,15,10,116,13,7,19,20,16,21,12,42,12,27,16,83,14,7,21,17,23,13,13,15,14,17,17,36,66,10,12,36,30,28,26,13,13,21,18,39,19,19,21,9,19,13,36,11,10,69,16,18,16,13,16,12,15,16,17,17,31,15,209,29,18,19,17,11,8,18,27,24,31,15,18,13,16,15,7,24,15,19,14,12,12,10,4,14,6,10,10,37,31,15,19,10,17,34,29,10,5,23,31,14,24,23,36,14,19,14,16,17,18,17,24,13,14,20,25,14,14,20,112,15,21,18,17,11,14,38,14,11,23,8,12,13,11,23,25,16,45,20,16,18,10,13,18,13,10,19,19,39,27,11,22,13,13,10,14,13,34,29,14,27,8,8,10,20,17,23,17,21,11,8,9,7,24,12,16,18,156,9,352,362,19,94,11,17,374,13,15,14,13,17,19,27,12,40,16,19,14,16,10,6,22,16,19,17,13,21,18,13,23,14,183,11,8,11,8,29,17,24,16,21,23,16,13,199,9,58,9,8,13,14,23,21,11,8,14,20,21,21,11,14,13,14,10,34,6,11,25,22,12,52,14,11,43,6,19,23,16,17,19,48,11,11,12,14,28,18,23,18,19,15,15,34,27,23,16,17,8,8,13,17,10,14,18,10,22,10,17,48,14,16,15,10,14,20,20,65,24,13,22,14,13,22,14,23,23,16,35,22,224,12,16,10,28,24,21,27,22,18,19,40,20,26,20,20,17,12,24,16,40,9,54,13,13,77,13,58,7,29,11,13,6,14,11,16,27,9,12,21,13,13,12,17,19,44,24,17,42,17,42,13,21,19,18,21,13,20,15,15,12,16,58,9,19,15,35,77,6,12,18,6,14,17,7,11,20,15,12,17,35,19,19,23,17,82,33,11,13,13,23,12,7,8,26,13,10,12,13,13,12,34,15,18,24,149,26,12,12,10,24,11,189,12,17,21,14,24,15,12,21,18,13,44,16,22,18,35,15,15,9,13,14,22,17,15,17,19,20,25,21,13,9,177,17,5,13,9,21,22,19,11,10,227,19,63,9,18,13,36,14,13,11,15,14,16,10,11,18,15,11,10,15,16,21,18,22,27,36,12,19,14,19,15,11,103,11,25,22,57,17,26,47,14,13,13,18,17,8,115,42,12,7,10,16,21,14,24,17,46,9,16,24,17,20,11,13,20,11,28,18,45,14,43,19,20,19,18,18,23,13,17,60,16,15,11,12,17,18,19,14,26,22,19,28,26,17,18,16,30,9,19,14,18,14,19,16,17,17,18,192,16,27,12,22,17,18,14,18,12,12,18,15,14,18,19,23,15,15,16,26,13,12,17,24,16,21,14,14,29,18,13,14,22,18,19,13,15,29,22,30,12,15,20,18,13,15,18,21,20,13,15,19,15,20,15,21,14,17,33,24,14,14,21,10,15,98,17,14,38,23,17,11,24,18,21,15,50,15,17,15,6,51,16,23,71,65,25,17,39,22,32,79,49,16,16,19,27,21,10,15,10,18,9,57,14,17,18,17,23,14,22,17,27,21,23,17,24,16,11,17,12,26,21,21,13,26,23,18,16,13,172,12,14,41,18,22,14,40,86,16,19,44,18,18,14,15,11,14,12,14,21,12,16,18,18,18,19,21,17,20,14,12,14,14,13,19,9,21,29,11,19,20,17,17,14,13,15,29,17,84,12,13,17,18,22,17,115,27,15,23,9,19,250,15,16,29,16,15,26,20,23,25,16,22,27,35,16,30,15,13,25,17,50,46,12,17,46,17,15,22,19,19,67,20,25,17,11,18,17,21,19,13,10,11,19,13,17,23,17,12,16,18,21,109,89,18,18,15,18,19,20,16,25,19,15,159,9,23,19,177,18,16,165,16,30,34,14,202,22,13,20,38,19,19,182,19,11,14,54,28,10,173,22,14,32,17,22,39,19,21,24,20,17,135,14,15,22,16,7,11,11,8,17,129,16,127,41,20,42,19,111,18,11,27,18,20,15,14,17,18,26,73,24,13,20,17,17,19,21,22,17,17,17,26,19,44,20,19,20,21,7,25,18,18,19,17,12,20,21,27,71,18,17,77,20,17,30,65,29,32,19,17,23,21,15,21,30,13,27,25,17,27,13,19,18,12,12,16,23,28,17,25,14,25,12,18,64,37,18,14,15,26,14,17,23,15,21,46,19,14,17,20,13,19,25,15,113,19,19,18,21,23,32,31,19,21,16,31,15,17,22,24,26,16,17,26,23,18,15,27,25,16,19,18,11,23,12,10,18,22,20,28,18,18,17,11,21,17,17,21,48,16,34,23,25,17,23,11,27,41,21,23,12,14,13,27,23,16,12,29,15,16,18,23,15,20,14,83,57,19,16,18,17,14,16,19,17,14,18,22,19,33,16,24,15,16,52,14,10,23,27,17,27,16,18,24,16,16,16,18,18,20,35,16,16,23,17,19,22,12,18,18,37,20,30,19,24,16,25,121,18,11,17,21,18,15,18,22,19,17,16,73,23,23,20,25,12,17,14,13,13,37,23,25,18,14,13,53,24,14,20,17,17,20,32,21,26,16,24,33,21,12,15,26,28,16,16,15,21,15,24,12,33,13,23,14,14,18,19,30,16,25,20,112,18,14,12,13,24,19,28,19,26,15,16,56,21,17,18,18,18,19,23,29,21,9,15,30,19,23,15,63,19,19,29,14,17,18,79,50,31,30,25,18,20,22,23,24,15,20,14,34,21,60,13,24,24,13,18,17,12,42,30,16,21,16,15,8,52,25,39,13,40,39,37,26,46,26,16,18,23,17,53,17,31,17,15,13,18,20,27,48,15,44,15,30,27,17,17,12,18,25,23,17,15,21,25,14,24,16,18,14,14,28,32,19,19,18,16,37,55,22,15,53,16,19,26,15,28,13,12,17,19,21,15,27,27,12,15,16,25,14,25,17,17,19,19,15,18,17,18,20,28,22,34,24,17,27,21,12,54,29,21,24,25,15,18,14,18,23,52,15,20,20,16,18,14,125,9,15,16,20,14,14,19,28,28,14,14,28,20,20,16,14,16,23,18,16,18,19,167,17,303,16,17,39,27,22,19,30,14,16,14,15,162,22,21,16,36,17,17,13,39,22,12,14,12,38,22,21,24,48,14,36,16,21,27,12,13,17,43,19,18,21,15,21,17,17,15,15,18,23,21,16,11,20,19,15,18,22,28,32,51,13,17,16,18,43,18,24,45,12,16,27,51,11,11,16,19,19,15,22,18,15,26,23,20,15,16,21,13,15,16,20,15,18,86,19,22,15,25,22,22,19,42,18,14,18,21,27,27,29,17,49,14,12,23,13,14,12,17,18,25,15,25,16,18,27,38,16,12,14,24,20,23,29,22,22,22,13,28,27,18,17,14,30,17,20,17,14,24,20,18,32,36,15,18,40,33,34,19,53,14,22,13,21,11,13,16,20,10,13,17,13,33,15,23,76,27,19,14,16,12,17,18,22,18,14,17,18,25,15,21,23,39,17,24,44,12,21,19,21,34,19,30,15,29,20,28,94,20,47,37,15,25,19,57,193,25,27,53,22,19,17,13,20,31,17,14,15,306,12,17,298,28,15,20,30,16,18,14,22,38,19,12,19,43,11,22,25,22,20,16,210,28,14,15,9,14,13,21,20,16,12,48,61,15,7,21,34,19,12,13,11,11,19,33,21,23,32,31,34,13,20,13,11,15,17,28,19,19,15,13,25,15,26,17,100,59,14,192,16,17,20,16,15,21,49,21,11,11,17,25,22,14,18,135,14,23,19,15,21,16,17,12,36,18,15,10,11,12,13,12,13,33,17,16,16,10,20,18,13,85,14,21,19,35,15,22,20,11,49,52,19,35,17,17,20,120,48,8,17,60,14,18,34,20,23,17,23,21,16,12,16,16,13,11,19,45,11,15,12,19,10,16,27,11,24,12,22,6,20,11,7,9,20,21,18,14,16,34,36,16,19,31,23,21,48,20,14,18,30,18,18,72,54,18,10,13,73,13,17,81,17,25,20,18,124,23,16,14,18,34,17,19,16,45,49,18,24,19,10,19,104,28,18,23,21,21,14,21,16,29,24,22,17,23,24,49,19,40,11,13,14,11,12,13,10,23,16,24,29,17,13,15,23,16,23,19,21,12,10,31,13,18,77,15,29,19,15,23,16,20,25,25,12,78,9,101,14,9,12,25,15,14,24,15,33,13,25,19,35,13,23,19,25,14,15,33,18,21,14,20,13,27,16,22,18,13,22,17,21,37,16,19,22,22,27,22,37,20,30,24,21,24,16,19,37,51,10,63,18,34,73,16,10,24,20,15,20,37,260,17,16,14],"timestamp":"2026-05-06T20:30:23.441Z"}</div>
+
+    <!-- Drucken -->
+    <div class="card no-print">
+      <div class="btn-row">
+        <button class="btn-success" onclick="doPrint()">🖶 Protokoll drucken</button>
+        <button class="btn-secondary" onclick="scrollTop()">↑ Neue Analyse</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+//  HOFFMANN REFERENZBEREICH-ANALYSE
+//
+//  Kerngedanke: Im Wahrscheinlichkeitsnetz bildet die normalverteilte
+//  Referenzpopulation einen GERADEN Abschnitt. Pathologische Werte
+//  weichen davon ab. Der Algorithmus findet diesen geraden Abschnitt
+//  analytisch — ohne vorher Perzentil-Grenzen festzulegen.
+//
+//  Auto-Detektion: Iteratives Trimmen der Ränder, solange R² steigt.
+//  Das ist die rechnerische Entsprechung des visuellen "Gerade anlegen".
+//
+//  Formelwerk:
+//    Plotting-Position (Blom): p_i = (i − 0,375) / (n + 0,25)
+//    Probit:                   z_i = Φ⁻¹(p_i)
+//    Regression:               z = a + b·x
+//    Referenzgrenzen:          x_2,5% = (−1,96 − a) / b
+//                              x_97,5%= ( 1,96 − a) / b
+//    Mittelwert:               μ = −a / b
+//    Standardabweichung:       σ =  1 / b
+// ═══════════════════════════════════════════════════════════════════════
+
+let gHoffChart = null;
+let gHistChart = null;
+let gRes       = null;   // aktuelles Ergebnis-Objekt
+let gName      = '';
+let gUnit      = '';
+
+// ── Inverse Normalverteilung (Peter Acklam's Näherung) ──────────────
+function probitInv(p) {
+  if (p <= 0) return -8;
+  if (p >= 1) return  8;
+  const a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,
+            1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00];
+  const b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,
+            6.680131188771972e+01,-1.328068155288572e+01];
+  const c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,
+           -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00];
+  const d=[ 7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00,
+             3.754408661907416e+00];
+  const pL=0.02425, pH=1-pL;
+  let q,r;
+  if (p<pL) {
+    q=Math.sqrt(-2*Math.log(p));
+    return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+           ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+  } else if (p<=pH) {
+    q=p-0.5; r=q*q;
+    return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q /
+           (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+  } else {
+    q=Math.sqrt(-2*Math.log(1-p));
+    return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+              ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+  }
+}
+
+// ── Lineare Regression z = a + b·x ───────────────────────────────────
+function linReg(xA, yA) {
+  const n=xA.length;
+  if (n<4) return null;
+  let sx=0,sy=0,sxx=0,sxy=0;
+  for(let i=0;i<n;i++){sx+=xA[i];sy+=yA[i];sxx+=xA[i]*xA[i];sxy+=xA[i]*yA[i];}
+  const D=n*sxx-sx*sx;
+  if(Math.abs(D)<1e-12) return null;
+  const b=(n*sxy-sx*sy)/D, a=(sy-b*sx)/n;
+  const yM=sy/n;
+  let ssT=0,ssR=0;
+  for(let i=0;i<n;i++){ssT+=(yA[i]-yM)**2; ssR+=(yA[i]-(a+b*xA[i]))**2;}
+  return { a, b, r2: ssT>0 ? 1-ssR/ssT : 1 };
+}
+
+// ── AUTO-DETEKTION des linearen Abschnitts ───────────────────────────
+// Greedy-Trimming: Starte mit allen Daten, entferne jeweils den
+// Randpunkt (links oder rechts), der R² stärker verbessert.
+// Stopp wenn R² ≥ 0,9985 oder < 40 % der Daten übrig.
+function autoDetectLinear(sortedData, zScores) {
+  const n = sortedData.length;
+  const minPts = Math.max(20, Math.floor(n * 0.30));
+
+  let lo = 0, hi = n;
+
+  // Warmlauf: entferne zunächst je 5 % von beiden Seiten
+  // (schützt vor stark verzerrenden Extremwerten in der ersten Schätzung)
+  lo = Math.floor(n * 0.05);
+  hi = Math.ceil(n  * 0.95);
+
+  let reg = linReg(sortedData.slice(lo, hi), zScores.slice(lo, hi));
+
+  for (let iter = 0; iter < n; iter++) {
+    if (!reg) break;
+    if (reg.r2 >= 0.9985) break;
+    if (hi - lo <= minPts) break;
+
+    // Residuum des linken und rechten Randpunkts
+    const resLo = Math.abs(zScores[lo]   - (reg.a + reg.b * sortedData[lo]));
+    const resHi = Math.abs(zScores[hi-1] - (reg.a + reg.b * sortedData[hi-1]));
+
+    // Teste beide Richtungen
+    const regL = linReg(sortedData.slice(lo+1, hi),  zScores.slice(lo+1, hi));
+    const regR = linReg(sortedData.slice(lo,   hi-1), zScores.slice(lo,   hi-1));
+
+    const r2L = regL ? regL.r2 : 0;
+    const r2R = regR ? regR.r2 : 0;
+
+    // Entferne nur, wenn es wirklich verbessert
+    const improveL = r2L - reg.r2;
+    const improveR = r2R - reg.r2;
+
+    if (improveL <= 0 && improveR <= 0) break;
+
+    if (improveL >= improveR) { lo++; reg = regL; }
+    else                      { hi--; reg = regR; }
+  }
+
+  return { lo, hi, r2: reg ? reg.r2 : 0 };
+}
+
+// ── Kerndaten aus sortiertem Array + Indizes berechnen ───────────────
+function calcFromIndices(sortedTrf, zScores, lo, hi, logT) {
+  const reg = linReg(sortedTrf.slice(lo, hi), zScores.slice(lo, hi));
+  if (!reg || reg.b <= 0) return null;
+  const { a, b, r2 } = reg;
+  const rawLo   = (-1.96 - a) / b;
+  const rawHi   = ( 1.96 - a) / b;
+  const rawMean =         -a  / b;
+  const rawSD   =          1  / b;
+  const T = logT ? Math.exp : x=>x;
+  return {
+    a, b, r2, lo, hi,
+    lowerLimit: T(rawLo),
+    upperLimit: T(rawHi),
+    mean:       T(rawMean),
+    sd:         logT ? null : rawSD,
+    geoMean:    logT ? Math.exp(rawMean) : null,
+    geoSD:      logT ? Math.exp(rawSD)   : null,
+    rawMean, rawSD
+  };
+}
+
+// ── Haupt-Hoffmann-Objekt ─────────────────────────────────────────────
+function buildHoffmann(rawData, logT) {
+  let d = [...rawData];
+  let excl = 0;
+  if (logT) { excl = d.filter(x=>x<=0).length; d = d.filter(x=>x>0).map(x=>Math.log(x)); }
+  d.sort((a,b)=>a-b);
+  const n  = d.length;
+  const pp = d.map((_,i) => (i+1-0.375)/(n+0.25));
+  const zz = pp.map(p => probitInv(p));
+  return { sortedTrf: d, sortedRaw: logT ? d.map(Math.exp) : d, zz, n, excl, logT };
+}
+
+// ── Daten parsen ──────────────────────────────────────────────────────
+function parseData(txt) {
+  // Komma ist immer Dezimaltrennzeichen, niemals Feldtrennzeichen.
+  // Trennzeichen zwischen Werten: Whitespace oder Semikolon.
+  return txt.split(/[\s;]+/)
+    .map(s => parseFloat(s.replace(',', '.')))
+    .filter(v => isFinite(v) && !isNaN(v));
+}
+
+function fmt(v,d=2) {
+  if(v==null||!isFinite(v)) return '–';
+  return v.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d});
+}
+function fmtR2(r2) {
+  const val=(r2*100).toFixed(1)+'%';
+  const cls=r2>=0.99?'badge-good':r2>=0.95?'badge-ok':'badge-bad';
+  return `<span class="badge ${cls}">${val}</span>`;
+}
+function median(arr) {
+  const m=Math.floor(arr.length/2);
+  return arr.length%2===0?(arr[m-1]+arr[m])/2:arr[m];
+}
+
+// ── Analyse starten ───────────────────────────────────────────────────
+function runAnalysis() {
+  const txt  = document.getElementById('dataInput').value;
+  const logT = document.getElementById('logTransform').checked;
+  gName      = document.getElementById('analyteName').value.trim() || 'Analyt';
+  gUnit      = document.getElementById('analyteUnit').value.trim();
+  const errEl= document.getElementById('errorMsg');
+
+  const raw = parseData(txt);
+  if (raw.length < 20) {
+    errEl.textContent = `Zu wenige Werte (${raw.length}). Mindestens 20 Messwerte erforderlich.`;
+    errEl.classList.remove('hidden'); return;
+  }
+  errEl.classList.add('hidden');
+
+  const base = buildHoffmann(raw, logT);
+  if (base.n < 20) {
+    errEl.textContent = 'Nach Log-Transformation zu wenige gültige Werte.';
+    errEl.classList.remove('hidden'); return;
+  }
+
+  // Linearen Abschnitt automatisch detektieren
+  const { lo, hi } = autoDetectLinear(base.sortedTrf, base.zz);
+  const fit = calcFromIndices(base.sortedTrf, base.zz, lo, hi, logT);
+  if (!fit) {
+    errEl.textContent = 'Regression fehlgeschlagen. Bitte Log-Transformation prüfen.';
+    errEl.classList.remove('hidden'); return;
+  }
+
+  gRes = { ...base, ...fit };
+
+  // Originaldaten für Reproduzierbarkeit im HTML einbetten
+  document.getElementById('originalData').textContent = JSON.stringify({
+    name: gName, unit: gUnit, log: logT,
+    values: raw, timestamp: new Date().toISOString()
+  });
+
+  document.getElementById('resultsSection').classList.remove('hidden');
+  renderAll();
+  document.getElementById('resultsSection').scrollIntoView({behavior:'smooth'});
+}
+
+// ── Vollständiges Neuzeichnen ─────────────────────────────────────────
+function renderAll() {
+  renderStats();
+  drawHoffmann();
+  drawHistogram();
+  drawDetail();
+  positionHandles();
+}
+
+// ── Statistik-Tabelle + Referenzintervall ─────────────────────────────
+function renderStats() {
+  const res = gRes;
+  const tag = `${gName}${gUnit ? ' ('+gUnit+')' : ''}`;
+  document.getElementById('resultTitle').textContent    = 'Ergebnisse: ' + tag;
+  document.getElementById('hoffmannTitle').textContent  = 'Hoffmann-Plot: ' + tag;
+
+  const ph = document.getElementById('printOnlyHeader');
+  ph.style.display = 'block';
+  document.getElementById('printTitle').textContent = tag;
+
+  // Filterzeile: Geschlecht/Alter aus dem Namen extrahieren (nach " — ")
+  const dashIdx = gName.indexOf(' — ');
+  const filterText = dashIdx >= 0 ? gName.substring(dashIdx + 3) : '';
+  document.getElementById('printFilter').textContent = filterText ? `Gruppe: ${filterText}` : '';
+
+  document.getElementById('printMeta').textContent  =
+    `Erstellt am ${new Date().toLocaleString('de-DE')} · n = ${res.n} Messwerte`;
+
+  const raw = res.sortedRaw;
+  document.getElementById('sN').textContent      = res.n + (res.excl ? ` (${res.excl} ≤ 0 ausgeschlossen)` : '');
+  document.getElementById('sMin').textContent    = fmt(raw[0])            + (gUnit?' '+gUnit:'');
+  document.getElementById('sMax').textContent    = fmt(raw[raw.length-1]) + (gUnit?' '+gUnit:'');
+  document.getElementById('sMedian').textContent = fmt(median(raw))       + (gUnit?' '+gUnit:'');
+
+  if (res.logT) {
+    document.getElementById('sMean').textContent = fmt(res.geoMean) + (gUnit?' '+gUnit:'') + ' (geom.)';
+    document.getElementById('sSD').textContent   = fmt(res.geoSD,3) + ' (geom. SD, Faktor)';
+    document.getElementById('sCV').textContent   = fmt(Math.abs(res.rawSD/res.rawMean*100)) + ' % (log-Skala)';
+  } else {
+    document.getElementById('sMean').textContent = fmt(res.mean)   + (gUnit?' '+gUnit:'');
+    document.getElementById('sSD').textContent   = fmt(res.sd)     + (gUnit?' '+gUnit:'');
+    document.getElementById('sCV').textContent   = fmt(Math.abs(res.sd/res.mean*100)) + ' %';
+  }
+
+  document.getElementById('sR2').innerHTML    = fmtR2(res.r2);
+  const nFit = res.hi - res.lo;
+  const pLo  = (res.lo  / res.n * 100).toFixed(1);
+  const pHi  = (res.hi  / res.n * 100).toFixed(1);
+  document.getElementById('sRange').textContent =
+    `${nFit} von ${res.n} Werten (${pLo} % – ${pHi} %)`;
+
+  document.getElementById('refLow').textContent  = fmt(res.lowerLimit);
+  document.getElementById('refHigh').textContent = fmt(res.upperLimit);
+  document.getElementById('refUnit').textContent = gUnit;
+
+  const sA = res.a >= 0 ? '+' : '';
+  document.getElementById('regFormula').textContent =
+    `z = ${fmt(res.b,5)}·x ${sA}${fmt(res.a,5)}`;
+
+  const warns = [];
+  if (res.r2 < 0.95)
+    warns.push({cls:'alert-error', txt:'R² < 0,95: Schlechte Linearität. Grenzlinien manuell anpassen oder bimodale Verteilung prüfen.'});
+  else if (res.r2 < 0.99)
+    warns.push({cls:'alert-warn',  txt:'R² < 0,99: Linearität akzeptabel. Grenzlinien ggf. nachkorrigieren.'});
+  if (res.n < 120)
+    warns.push({cls:'alert-info',  txt:`n = ${res.n} < 120: Wenige Daten – Referenzintervall mit Vorsicht interpretieren (CLSI EP28-A3c).`});
+  if (res.lowerLimit < 0 && !res.logT)
+    warns.push({cls:'alert-warn',  txt:'Untere Grenze negativ – Log-Transformation für rechtsschiefe Analyte erwägen.'});
+
+  document.getElementById('warnArea').innerHTML = warns.map(w =>
+    `<div class="alert ${w.cls}">${w.txt}</div>`
+  ).join('');
+
+  document.getElementById('methodNote').innerHTML =
+    `<strong>Methode:</strong> Das Hoffmann-Verfahren identifiziert im Wahrscheinlichkeitsnetz den linearen Abschnitt
+    der kumulierten Häufigkeitsverteilung als Gauß-Kern der Referenzpopulation. Die Auto-Detektion findet diesen
+    Abschnitt durch iteratives Trimmen: von beiden Rändern werden Punkte entfernt, solange die Linearität (R²) zunimmt —
+    analog zum visuellen Anlegen einer Geraden im klassischen Verfahren. Die Grenzen können anschließend per Drag
+    verfeinert werden. Plotting-Positionen nach Blom: <em>p<sub>i</sub> = (i − 0,375) / (n + 0,25)</em>.`;
+}
+
+// ── Hoffmann-Plot ─────────────────────────────────────────────────────
+function drawHoffmann() {
+  // Zoom-Zustand vor dem Neuzeichnen retten
+  let savedZoom = null;
+  if (gHoffChart) {
+    const sx = gHoffChart.scales.x, sy = gHoffChart.scales.y;
+    savedZoom = { xMin: sx.min, xMax: sx.max, yMin: sy.min, yMax: sy.max };
+    gHoffChart.destroy();
+  }
+  const ctx = document.getElementById('hoffmannCanvas').getContext('2d');
+  const res = gRes;
+  const raw = res.sortedRaw;
+  const xMin = raw[0], xMax = raw[raw.length-1];
+  const zz   = res.zz;
+
+  // Bei Log-Transformation: x-Werte manuell in den Log-Raum bringen (lineare Achse bleibt).
+  // Das ist robuster als Chart.js type:'logarithmic', das mit Zoom/Annotation-Plugins
+  // beim toDataURL(PDF-Export) zu einem leeren Canvas führt.
+  const xc = res.logT ? v => Math.log(v) : v => v;
+
+  const MAX_DISPLAY = 10000;
+  const step = raw.length > MAX_DISPLAY ? Math.ceil(raw.length / MAX_DISPLAY) : 1;
+  const inside  = [], outside = [];
+  for (let i = 0; i < raw.length; i += step) {
+    const pt = { x: xc(raw[i]), y: zz[i] };
+    if (i >= res.lo && i < res.hi) inside.push(pt); else outside.push(pt);
+  }
+
+  // z = a + b·log(x) ist auf der log-transformierten x-Achse eine Gerade → 2 Punkte.
+  const fitLine = [
+    { x: xc(xMin), y: res.a + res.b * (res.logT ? Math.log(xMin) : xMin) },
+    { x: xc(xMax), y: res.a + res.b * (res.logT ? Math.log(xMax) : xMax) }
+  ];
+
+  // ±1,96 SD Hilfslinien
+  const hLo = [{x:xc(xMin),y:-1.96},{x:xc(xMax),y:-1.96}];
+  const hHi = [{x:xc(xMin),y: 1.96},{x:xc(xMax),y: 1.96}];
+
+  gHoffChart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Ausgeschlossene Werte', data: outside,
+          pointRadius: 3, pointBorderWidth: 1,
+          pointBackgroundColor: 'rgba(148,163,184,0.45)',
+          pointBorderColor:     'rgba(100,116,139,0.6)',
+          order: 4
+        },
+        {
+          label: 'Anpassungsbereich', data: inside,
+          pointRadius: 3, pointBorderWidth: 1,
+          pointBackgroundColor: 'rgba(37,99,235,0.65)',
+          pointBorderColor:     'rgba(29,78,216,0.9)',
+          order: 3
+        },
+        {
+          label: 'Regressionsgerade', data: fitLine,
+          type:'line', pointRadius:0,
+          borderColor:'rgba(220,38,38,0.85)', borderWidth:2,
+          order: 1
+        },
+        {
+          label:'−1,96 SD (2,5. Pz.)', data:hLo,
+          type:'line', pointRadius:0,
+          borderColor:'rgba(22,163,74,0.7)', borderWidth:1.5, borderDash:[5,5],
+          order:2
+        },
+        {
+          label:'+1,96 SD (97,5. Pz.)', data:hHi,
+          type:'line', pointRadius:0,
+          borderColor:'rgba(22,163,74,0.7)', borderWidth:1.5, borderDash:[5,5],
+          order:2
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: { display: false },
+        annotation: {
+          annotations: {
+            refLo: {
+              type:'line', scaleID:'x', value: xc(res.lowerLimit),
+              borderColor:'rgba(234,88,12,0.0)', borderWidth:0  // unsichtbar – Griff übernimmt
+            },
+            refHi: {
+              type:'line', scaleID:'x', value: xc(res.upperLimit),
+              borderColor:'rgba(234,88,12,0.0)', borderWidth:0
+            }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: c => {
+              const xOrig = res.logT ? Math.exp(c.parsed.x) : c.parsed.x;
+              return `x=${fmt(xOrig,3)}, z=${fmt(c.parsed.y,3)}`;
+            }
+          }
+        },
+        zoom: {
+          zoom: {
+            wheel: { enabled: true },
+            pinch: { enabled: true },
+            mode: 'xy',
+            onZoom: () => positionHandles()
+          },
+          pan: {
+            enabled: true,
+            mode: 'xy',
+            onPan: () => positionHandles()
+          }
+        }
+      },
+      scales: {
+        x: {
+          title:{ display:true, text: gName+(gUnit?' ('+gUnit+')':'') },
+          ticks: res.logT ? {
+            callback: v => fmt(Math.exp(v), Math.exp(v) < 10 ? 2 : 0)
+          } : {}
+        },
+        y: {
+          title: { display:true, text:'Normales Quantil (z)' },
+          ticks: {
+            callback: v => {
+              const m={'-2.576':'0,5%','-1.96':'2,5%','-1.282':'10%',
+                        '0':'50%','1.282':'90%','1.96':'97,5%','2.576':'99,5%'};
+              return m[parseFloat(v).toFixed(3)] ?? v.toFixed(1);
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Zoom-Zustand wiederherstellen
+  if (savedZoom) {
+    gHoffChart.zoomScale('x', { min: savedZoom.xMin, max: savedZoom.xMax }, 'none');
+    gHoffChart.zoomScale('y', { min: savedZoom.yMin, max: savedZoom.yMax }, 'none');
+  }
+}
+
+// ── Histogramm ────────────────────────────────────────────────────────
+function drawHistogram() {
+  if (gHistChart) gHistChart.destroy();
+  const ctx = document.getElementById('histCanvas').getContext('2d');
+  const res = gRes;
+  const raw = res.sortedRaw;
+  const n   = raw.length;
+
+  // Darstellungsbereich:
+  //  1. Basis: 2. bis 98. Perzentile der tatsächlichen Daten
+  //  2. Erweitert: beide Referenzgrenzen + 10 % Rand müssen IMMER sichtbar sein
+  //  3. Nicht unter 0 (positive Analyte)
+  const pLo = raw[Math.max(0,     Math.floor(0.02 * n))];
+  const pHi = raw[Math.min(n - 1, Math.ceil (0.98 * n))];
+  const refMargin = (res.upperLimit - res.lowerLimit) * 0.15;
+  let dispMin = Math.min(pLo, res.lowerLimit - refMargin);
+  let dispMax = Math.max(pHi, res.upperLimit + refMargin);
+  dispMin = Math.max(0, dispMin);
+  // xMin = tatsächliches Daten-Minimum (nicht darunter), xMax = voller Bereich
+  const xMin = Math.max(raw[0], dispMin);
+  const xMax = dispMax;
+
+  const nB = Math.min(60, Math.max(15, Math.round(Math.sqrt(n))));
+  const bw = (xMax - xMin) / nB;
+
+  const centers = Array.from({length:nB}, (_,i) => xMin + (i+0.5)*bw);
+  const counts  = new Array(nB).fill(0);
+  for (const v of raw) {
+    if (v < xMin || v > xMax) continue;   // Ausreißer außerhalb des Fensters ignorieren
+    let i = Math.floor((v - xMin) / bw);
+    if (i >= nB) i = nB - 1;
+    counts[i]++;
+  }
+
+  const curve = centers.map(x => {
+    let y;
+    if (res.logT) {
+      const lx = Math.log(x);
+      y = (1/(x * res.rawSD * Math.sqrt(2*Math.PI))) *
+          Math.exp(-0.5 * ((lx - res.rawMean) / res.rawSD)**2);
+    } else {
+      y = (1/(res.sd * Math.sqrt(2*Math.PI))) *
+          Math.exp(-0.5 * ((x - res.mean) / res.sd)**2);
+    }
+    return y * n * bw;
+  });
+
+  const barBg  = centers.map(x => x>=res.lowerLimit&&x<=res.upperLimit ? 'rgba(37,99,235,0.55)' : 'rgba(148,163,184,0.4)');
+  const barBdr = centers.map(x => x>=res.lowerLimit&&x<=res.upperLimit ? 'rgba(29,78,216,0.8)'  : 'rgba(100,116,139,0.5)');
+
+  function bIdx(v) { return (v - xMin) / bw - 0.5; }
+
+  gHistChart = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: centers.map(x=>fmt(x,2)),
+      datasets:[
+        {
+          label:'Häufigkeit', data:counts,
+          backgroundColor:barBg, borderColor:barBdr, borderWidth:1, order:2
+        },
+        {
+          label:'Normalverteilung (geschätzt)', data:curve,
+          type:'line', borderColor:'rgba(220,38,38,0.85)', borderWidth:2,
+          pointRadius:0, fill:false, order:1
+        }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:false,
+      plugins:{
+        legend:{ display: false },
+        annotation:{
+          annotations:{
+            refLo:{
+              type:'line', scaleID:'x', value: bIdx(res.lowerLimit),
+              borderColor:'rgba(234,88,12,0.9)', borderWidth:2, borderDash:[6,3],
+              label:{display:true,position:'end',content:fmt(res.lowerLimit),
+                     color:'white',backgroundColor:'rgba(234,88,12,0.85)',font:{size:11}}
+            },
+            refHi:{
+              type:'line', scaleID:'x', value: bIdx(res.upperLimit),
+              borderColor:'rgba(234,88,12,0.9)', borderWidth:2, borderDash:[6,3],
+              label:{display:true,position:'end',content:fmt(res.upperLimit),
+                     color:'white',backgroundColor:'rgba(234,88,12,0.85)',font:{size:11}}
+            }
+          }
+        },
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.parsed.y,1)}`}}
+      },
+      scales:{
+        x:{title:{display:true,text:gName+(gUnit?' ('+gUnit+')':'')},ticks:{maxTicksLimit:10,maxRotation:45}},
+        y:{title:{display:true,text:'Absolute Häufigkeit'}}
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  INTERAKTIVE DRAG-GRIFFE
+//  Der Nutzer zieht die orangen Linien, um den Anpassungsbereich
+// ── Detail-Chart: nur Anpassungsbereich (Print-only) ─────────────────
+let gDetailChart = null;
+
+function drawDetail() {
+  if (gDetailChart) gDetailChart.destroy();
+  const res = gRes;
+  if (!res) return;
+
+  document.getElementById('detailCard').style.display = '';
+  const tag = `${gName}${gUnit ? ' ('+gUnit+')' : ''}`;
+  document.getElementById('detailTitle').textContent = 'Anpassungsbereich (Detail): ' + tag;
+
+  const ctx = document.getElementById('detailCanvas').getContext('2d');
+  const raw = res.sortedRaw, zz = res.zz;
+
+  // Bei Log-Transformation: x manuell in log-Raum (lineare Achse bleibt, verhindert PDF-Bug)
+  const xc = res.logT ? v => Math.log(v) : v => v;
+
+  // Nur die Punkte im Anpassungsbereich
+  const pts = [];
+  for (let i = res.lo; i < res.hi; i++) pts.push({ x: xc(raw[i]), y: zz[i] });
+
+  // Regressionslinie: 2 Punkte genügen (in log-Raum linear)
+  const xLo = raw[res.lo], xHi = raw[res.hi - 1];
+  const fitLine = [
+    { x: xc(xLo), y: res.a + res.b * (res.logT ? Math.log(xLo) : xLo) },
+    { x: xc(xHi), y: res.a + res.b * (res.logT ? Math.log(xHi) : xHi) }
+  ];
+
+  // Referenzgrenzen als vertikale Markierung via Annotation
+  gDetailChart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Anpassungsbereich', data: pts,
+          pointRadius: 3, pointBorderWidth: 1,
+          pointBackgroundColor: 'rgba(37,99,235,0.65)',
+          pointBorderColor: 'rgba(29,78,216,0.9)'
+        },
+        {
+          label: 'Regressionsgerade', data: fitLine,
+          type: 'line', pointRadius: 0,
+          borderColor: 'rgba(220,38,38,0.85)', borderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: { display: false },
+        annotation: {
+          annotations: {
+            refLoLine: {
+              type: 'line', scaleID: 'x', value: xc(res.lowerLimit),
+              borderColor: 'rgba(22,163,74,0.8)', borderWidth: 2, borderDash: [5,4],
+              label: { display: true, content: fmt(res.lowerLimit) + (gUnit?' '+gUnit:''),
+                       position: 'start', font: { size: 10 } }
+            },
+            refHiLine: {
+              type: 'line', scaleID: 'x', value: xc(res.upperLimit),
+              borderColor: 'rgba(22,163,74,0.8)', borderWidth: 2, borderDash: [5,4],
+              label: { display: true, content: fmt(res.upperLimit) + (gUnit?' '+gUnit:''),
+                       position: 'start', font: { size: 10 } }
+            },
+            zLoLine: {
+              type: 'line', scaleID: 'y', value: -1.96,
+              borderColor: 'rgba(22,163,74,0.4)', borderWidth: 1, borderDash: [3,3]
+            },
+            zHiLine: {
+              type: 'line', scaleID: 'y', value: 1.96,
+              borderColor: 'rgba(22,163,74,0.4)', borderWidth: 1, borderDash: [3,3]
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: gName + (gUnit ? ' (' + gUnit + ')' : '') },
+          ticks: res.logT ? { callback: v => fmt(Math.exp(v), Math.exp(v) < 10 ? 2 : 0) } : {}
+        },
+        y: { title: { display: true, text: 'Normales Quantil (z)' } }
+      }
+    }
+  });
+}
+
+//  (= den "geraden Abschnitt") manuell nachzujustieren.
+//  Die Regression aktualisiert sich sofort.
+// ═══════════════════════════════════════════════════════════════════════
+
+let dragState = null;  // { handle: 'left'|'right', startX: px }
+
+function positionHandles() {
+  if (!gHoffChart || !gRes) return;
+
+  const chart    = gHoffChart;
+  const xScale   = chart.scales.x;
+  const canvas   = document.getElementById('hoffmannCanvas');
+  const container= document.getElementById('plotContainer');
+
+  // Pixel-Positionen der aktuellen Grenzen des Anpassungsbereichs
+  const loData = gRes.sortedRaw[gRes.lo];
+  const hiData = gRes.sortedRaw[gRes.hi - 1];
+  const xcPos = gRes.logT ? v => Math.log(v) : v => v;
+
+  const pxLo = xScale.getPixelForValue(xcPos(loData));
+  const pxHi = xScale.getPixelForValue(xcPos(hiData));
+
+  const hL = document.getElementById('handleLeft');
+  const hR = document.getElementById('handleRight');
+
+  hL.classList.remove('hidden'); hR.classList.remove('hidden');
+  hL.style.left = pxLo + 'px';
+  hR.style.left = pxHi + 'px';
+}
+
+function getHandleXValue(pxOffset) {
+  const chart  = gHoffChart;
+  const xScale = chart.scales.x;
+  return xScale.getValueForPixel(pxOffset);
+}
+
+function startDrag(e, side) {
+  e.preventDefault();
+  dragState = { side, startClientX: e.clientX };
+
+  document.addEventListener('mousemove', onDrag);
+  document.addEventListener('mouseup',   endDrag);
+  document.addEventListener('touchmove', onDragTouch, {passive:false});
+  document.addEventListener('touchend',  endDrag);
+}
+
+document.getElementById('handleLeft').addEventListener('mousedown',  e => startDrag(e,'left'));
+document.getElementById('handleRight').addEventListener('mousedown', e => startDrag(e,'right'));
+document.getElementById('handleLeft').addEventListener('touchstart',  e => startDrag(e.touches[0],'left'),{passive:false});
+document.getElementById('handleRight').addEventListener('touchstart', e => startDrag(e.touches[0],'right'),{passive:false});
+
+function onDragTouch(e) { e.preventDefault(); onDrag(e.touches[0]); }
+
+function onDrag(e) {
+  if (!dragState || !gHoffChart) return;
+
+  const canvas  = document.getElementById('hoffmannCanvas');
+  const rect    = canvas.getBoundingClientRect();
+  const xScale  = gHoffChart.scales.x;
+
+  // Mausposition relativ zum Canvas
+  const canvasPx = e.clientX - rect.left;
+  const rawVal   = xScale.getValueForPixel(canvasPx);
+  // Achse zeigt log(x) bei logT → zurücktransformieren für Vergleich mit rawArr
+  const dataVal  = gRes.logT ? Math.exp(rawVal) : rawVal;
+
+  // Finde nächsten Datenpunkt
+  const rawArr = gRes.sortedRaw;
+  let   trfArr = gRes.sortedTrf;
+
+  if (dragState.side === 'left') {
+    // Suche Index des nächsten Datenpunkts rechts von dataVal
+    let idx = rawArr.findIndex(v => v >= dataVal);
+    if (idx < 0) idx = 0;
+    // Mindestens 10 Punkte Abstand zur rechten Grenze
+    const maxLo = gRes.hi - 10;
+    idx = Math.max(0, Math.min(idx, maxLo));
+    if (idx !== gRes.lo) {
+      gRes.lo = idx;
+      updateFromDrag();
+    }
+  } else {
+    let idx = rawArr.findIndex(v => v > dataVal);
+    if (idx < 0) idx = rawArr.length;
+    const minHi = gRes.lo + 10;
+    idx = Math.max(minHi, Math.min(idx, rawArr.length));
+    if (idx !== gRes.hi) {
+      gRes.hi = idx;
+      updateFromDrag();
+    }
+  }
+}
+
+function endDrag() {
+  dragState = null;
+  document.removeEventListener('mousemove', onDrag);
+  document.removeEventListener('mouseup',   endDrag);
+  document.removeEventListener('touchmove', onDragTouch);
+  document.removeEventListener('touchend',  endDrag);
+}
+
+function updateFromDrag() {
+  const fit = calcFromIndices(gRes.sortedTrf, gRes.zz, gRes.lo, gRes.hi, gRes.logT);
+  if (!fit) return;
+  Object.assign(gRes, fit);
+  // Hoffmann-Plot neu zeichnen (schnell, kein Histogram)
+  drawHoffmann();
+  positionHandles();
+  renderStats();
+  // Histogramm nach kurzer Pause (sonst unruhig beim Ziehen)
+  clearTimeout(updateFromDrag._t);
+  updateFromDrag._t = setTimeout(drawHistogram, 300);
+}
+
+// ── Neu auto-detektieren ──────────────────────────────────────────────
+function reAutoDetect() {
+  const { lo, hi } = autoDetectLinear(gRes.sortedTrf, gRes.zz);
+  const fit = calcFromIndices(gRes.sortedTrf, gRes.zz, lo, hi, gRes.logT);
+  if (!fit) return;
+  gRes.lo = lo; gRes.hi = hi;
+  Object.assign(gRes, fit);
+  renderAll();
+}
+
+// ── UI-Hilfsfunktionen ────────────────────────────────────────────────
+function clearAll() {
+  ['dataInput','analyteName','analyteUnit'].forEach(id =>
+    document.getElementById(id).value = '');
+  document.getElementById('logTransform').checked = false;
+  document.getElementById('errorMsg').classList.add('hidden');
+  document.getElementById('resultsSection').classList.add('hidden');
+  if (gHoffChart)   { gHoffChart.destroy();   gHoffChart = null; }
+  if (gHistChart)   { gHistChart.destroy();   gHistChart = null; }
+  if (gDetailChart) { gDetailChart.destroy(); gDetailChart = null; }
+  gRes = null;
+}
+
+// ── Print: Canvas → statisches <img> ──────────────────────────────
+// Chart.js-Canvases respektieren kein CSS-Print-Layout.
+// Trick: beforeprint wandelt jedes Canvas in ein normales <img> um.
+// Das Bild verhält sich wie jedes andere HTML-Element: Höhe, Umbruch,
+// Fluss — alles funktioniert einfach.
+window.addEventListener('beforeprint', () => {
+  document.querySelectorAll('.chart-wrap canvas, .chart-wrap-tall canvas').forEach(canvas => {
+    const img = document.createElement('img');
+    img.src = canvas.toDataURL('image/png', 1.0);
+    img.className = 'print-chart-img';
+    canvas.parentNode.insertBefore(img, canvas.nextSibling);
+  });
+});
+
+window.addEventListener('afterprint', () => {
+  document.querySelectorAll('.print-chart-img').forEach(img => img.remove());
+});
+
+function doPrint() {
+  document.getElementById('printOnlyHeader').style.display = 'block';
+  window.print();
+}
+
+function scrollTop() {
+  document.getElementById('inputCard').scrollIntoView({behavior:'smooth'});
+}
+
+// ── Beispieldaten: Natrium mit Patienten ──────────────────────────────
+function loadExample() {
+  function rNorm(mu,s){
+    const u1=Math.random(),u2=Math.random();
+    return mu+s*Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);
+  }
+  const v=[];
+  for(let i=0;i<260;i++){let x=rNorm(140,3.5); if(x>120&&x<165) v.push(x);}
+  for(let i=0;i<35; i++){let x=rNorm(125,5);   if(x>108&&x<133) v.push(x);}
+  for(let i=0;i<25; i++){let x=rNorm(153,4);   if(x>145&&x<170) v.push(x);}
+  v.sort(()=>Math.random()-.5);
+  document.getElementById('analyteName').value='Natrium';
+  document.getElementById('analyteUnit').value='mmol/L';
+  document.getElementById('dataInput').value=v.map(x=>x.toFixed(1)).join('\n');
+  document.getElementById('errorMsg').classList.add('hidden');
+}
+
+// ── URL-Parameter-API für programmatischen Aufruf ────────────────────
+// Parameter:
+//   ?name=Natrium          Analytname
+//   &unit=mmol/L           Einheit
+//   &log=1                 Log-Transformation (0 oder 1)
+//   &data=135,137,140,...  Messwerte (Komma-getrennt)
+//   &autoprint=1           Automatisch drucken (für Batch-Modus)
+//
+// Beispiel:
+//   index.html?name=CRP&unit=mg/L&log=1&data=0.5,1.2,3.4,...&autoprint=1
+//
+(function autoStartFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has('data')) return; // kein programmatischer Aufruf
+
+  const name = params.get('name') || 'Analyt';
+  const unit = params.get('unit') || '';
+  const logT = params.get('log') === '1';
+  const data = params.get('data') || '';
+  const autoprint = params.get('autoprint') === '1';
+
+  document.getElementById('analyteName').value = name;
+  document.getElementById('analyteUnit').value = unit;
+  document.getElementById('logTransform').checked = logT;
+  document.getElementById('dataInput').value = data.replace(/,/g, '\n');
+
+  // Analyse starten (kurze Verzögerung damit Chart.js initialisiert ist)
+  setTimeout(() => {
+    runAnalysis();
+
+    if (autoprint) {
+      // Warten bis Charts gerendert sind, dann drucken
+      setTimeout(() => { doPrint(); }, 500);
+    }
+  }, 200);
+})();
+
+// ── Gespeichertes HTML wiederherstellen ──────────────────────────────
+// Wenn #originalData gefüllt ist (= gespeichertes HTML aus Batch),
+// Formular befüllen und Analyse automatisch starten.
+(function autoRestoreFromSaved() {
+  const el = document.getElementById('originalData');
+  if (!el || !el.textContent.trim()) return;
+  // URL-Parameter haben Vorrang
+  if (new URLSearchParams(window.location.search).has('data')) return;
+
+  try {
+    const saved = JSON.parse(el.textContent);
+    document.getElementById('analyteName').value = saved.name || '';
+    document.getElementById('analyteUnit').value = saved.unit || '';
+    document.getElementById('logTransform').checked = !!saved.log;
+    document.getElementById('dataInput').value = saved.values.join('\n');
+
+    setTimeout(() => { runAnalysis(); }, 200);
+  } catch(e) { /* JSON kaputt — ignorieren */ }
+})();
+</script>
+
+
+</body></html>

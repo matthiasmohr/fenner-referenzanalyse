@@ -1,0 +1,118 @@
+kuerzel;name;unit;log;geschlecht;alter_tage_von;alter_tage_bis
+AP;Alkalische Phosphatase;U/l;1;*;1;15
+AP;Alkalische Phosphatase;U/l;1;*;15;365
+AP;Alkalische Phosphatase;U/l;1;männlich;365;1095
+AP;Alkalische Phosphatase;U/l;1;weiblich;365;1095
+AP;Alkalische Phosphatase;U/l;1;männlich;1095;2190
+AP;Alkalische Phosphatase;U/l;1;weiblich;1095;2190
+AP;Alkalische Phosphatase;U/l;1;männlich;2190;3650
+AP;Alkalische Phosphatase;U/l;1;weiblich;2190;3650
+AP;Alkalische Phosphatase;U/l;1;männlich;3650;4745
+AP;Alkalische Phosphatase;U/l;1;weiblich;3650;4745
+AP;Alkalische Phosphatase;U/l;1;männlich;4745;5475
+AP;Alkalische Phosphatase;U/l;1;weiblich;4745;5475
+AP;Alkalische Phosphatase;U/l;1;männlich;5475;6570
+AP;Alkalische Phosphatase;U/l;1;weiblich;5475;6570
+AP;Alkalische Phosphatase;U/l;1;männlich;6570;36500
+AP;Alkalische Phosphatase;U/l;1;weiblich;6570;36500
+AMY;Amylase;U/l;1;*;1;183
+AMY;Amylase;U/l;1;*;183;365
+AMY;Amylase;U/l;1;*;365;3285
+AMY;Amylase;U/l;1;*;3285;6570
+AMY;Amylase;U/l;1;*;6570;36500
+BILI;Bilirubin direkt;mg/dl;1;*;1;183
+BILI;Bilirubin direkt;mg/dl;1;*;183;365
+BILI;Bilirubin direkt;mg/dl;1;*;365;3285
+BILI;Bilirubin direkt;mg/dl;1;*;3285;6570
+BILI;Bilirubin direkt;mg/dl;1;*;6570;36500
+CK;CK gesamt;U/l;1;*;1;183
+CK;CK gesamt;U/l;1;*;183;730
+CK;CK gesamt;U/l;1;männlich;730;3285
+CK;CK gesamt;U/l;1;weiblich;730;3285
+CK;CK gesamt;U/l;1;männlich;3285;5110
+CK;CK gesamt;U/l;1;weiblich;3285;5110
+CK;CK gesamt;U/l;1;männlich;5110;6570
+CK;CK gesamt;U/l;1;weiblich;5110;6570
+FE;Eisen;µg/dl;1;*;1;365
+FE;Eisen;µg/dl;1;*;365;1095
+FE;Eisen;µg/dl;1;*;1095;6570
+FE;Eisen;µg/dl;1;*;6570;36500
+FERR;Ferritin;µg/l;1;*;1;15
+FERR;Ferritin;µg/l;1;*;15;365
+FERR;Ferritin;µg/l;1;*;365;1826
+FERR;Ferritin;µg/l;1;*;1826;3650
+FERR;Ferritin;µg/l;1;männlich;3650;5475
+FERR;Ferritin;µg/l;1;weiblich;3650;5475
+FERR;Ferritin;µg/l;1;männlich;5475;6570
+FERR;Ferritin;µg/l;1;weiblich;5475;6570
+FERR;Ferritin;µg/l;1;männlich;6570;36500
+FERR;Ferritin;µg/l;1;weiblich;6570;36500
+GGT;Gamma - GT;U/l;1;*;1;15
+GGT;Gamma - GT;U/l;1;*;15;365
+GGT;Gamma - GT;U/l;1;*;365;2190
+GGT;Gamma - GT;U/l;1;*;2190;5475
+GGT;Gamma - GT;U/l;1;*;5475;6570
+GGT;Gamma - GT;U/l;1;*;6570;36500
+GOT;GOT (AST);U/l;1;*;1;15
+GOT;GOT (AST);U/l;1;*;15;365
+GOT;GOT (AST);U/l;1;*;365;2190
+GOT;GOT (AST);U/l;1;*;2190;5475
+GOT;GOT (AST);U/l;1;*;5475;6570
+GOT;GOT (AST);U/l;1;*;6570;36500
+HS;Harnsäure;mg/dl;1;*;1;15
+HS;Harnsäure;mg/dl;1;*;15;365
+HS;Harnsäure;mg/dl;1;*;365;2190
+HS;Harnsäure;mg/dl;1;*;2190;5475
+HS;Harnsäure;mg/dl;1;männlich;5475;6570
+HS;Harnsäure;mg/dl;1;weiblich;5475;6570
+HS;Harnsäure;mg/dl;1;männlich;6570;36500
+HS;Harnsäure;mg/dl;1;weiblich;6570;36500
+HST;Harnstoff;mg/dl;0;*;1;15
+HST;Harnstoff;mg/dl;0;*;15;365
+HST;Harnstoff;mg/dl;0;*;365;3650
+HST;Harnstoff;mg/dl;0;*;3650;6570
+HST;Harnstoff;mg/dl;0;männlich;6570;36500
+HST;Harnstoff;mg/dl;0;weiblich;6570;36500
+LACT;Laktat;mmol/l;1;*;1;15
+LACT;Laktat;mmol/l;1;*;15;365
+LACT;Laktat;mmol/l;1;*;365;3650
+LACT;Laktat;mmol/l;1;*;3650;6570
+LACT;Laktat;mmol/l;1;männlich;6570;36500
+LACT;Laktat;mmol/l;1;weiblich;6570;36500
+LDH;LDH;U/l;1;*;1;15
+LDH;LDH;U/l;1;*;15;365
+LDH;LDH;U/l;1;*;365;2190
+LDH;LDH;U/l;1;*;2190;5475
+LDH;LDH;U/l;1;männlich;5475;6570
+LDH;LDH;U/l;1;weiblich;5475;6570
+LDH;LDH;U/l;1;männlich;6570;36500
+LDH;LDH;U/l;1;weiblich;6570;36500
+MG;Magnesium;mmol/l;0;*;1;15
+MG;Magnesium;mmol/l;0;*;15;365
+MG;Magnesium;mmol/l;0;*;365;6570
+MG;Magnesium;mmol/l;0;*;6570;36500
+NA;Natrium;mmol/l;0;*;1;6570
+NA;Natrium;mmol/l;0;*;6570;36500
+K;Kalium;mmol/l;0;*;1;6570
+K;Kalium;mmol/l;0;*;6570;36500
+CL;Chlorid;mmol/l;0;*;1;6570
+CL;Chlorid;mmol/l;0;*;6570;36500
+PO4;Phosphor anorg.;mmol/l;0;*;1;15
+PO4;Phosphor anorg.;mmol/l;0;*;15;365
+PO4;Phosphor anorg.;mmol/l;0;*;365;2190
+PO4;Phosphor anorg.;mmol/l;0;*;2190;5475
+PO4;Phosphor anorg.;mmol/l;0;*;5475;6570
+PO4;Phosphor anorg.;mmol/l;0;*;6570;36500
+GES;Gesamteiweiß;g/dl;0;*;1;15
+GES;Gesamteiweiß;g/dl;0;*;15;365
+GES;Gesamteiweiß;g/dl;0;*;365;6570
+GES;Gesamteiweiß;g/dl;0;*;6570;23725
+TRAF;Transferrin;g/l;0;*;1;15
+TRAF;Transferrin;g/l;0;*;15;365
+TRAF;Transferrin;g/l;0;*;365;3650
+TRAF;Transferrin;g/l;0;männlich;3650;5475
+TRAF;Transferrin;g/l;0;weiblich;3650;5475
+TRAF;Transferrin;g/l;0;männlich;5475;6570
+TRAF;Transferrin;g/l;0;weiblich;5475;6570
+TRAF;Transferrin;g/l;0;männlich;6570;36500
+TRAF;Transferrin;g/l;0;weiblich;6570;36500

@@ -1,0 +1,17 @@
+kuerzel;name;unit;log;geschlecht;alter_tage_von;alter_tage_bis
+AP;Alkalische Phosphatase;U/l;1;*;1;15
+AP;Alkalische Phosphatase;U/l;1;*;15;365
+AP;Alkalische Phosphatase;U/l;1;männlich;365;1095
+AP;Alkalische Phosphatase;U/l;1;weiblich;365;1095
+AP;Alkalische Phosphatase;U/l;1;männlich;1095;2190
+AP;Alkalische Phosphatase;U/l;1;weiblich;1095;2190
+AP;Alkalische Phosphatase;U/l;1;männlich;2190;3650
+AP;Alkalische Phosphatase;U/l;1;weiblich;2190;3650
+AP;Alkalische Phosphatase;U/l;1;männlich;3650;4745
+AP;Alkalische Phosphatase;U/l;1;weiblich;3650;4745
+AP;Alkalische Phosphatase;U/l;1;männlich;4745;5475
+AP;Alkalische Phosphatase;U/l;1;weiblich;4745;5475
+AP;Alkalische Phosphatase;U/l;1;männlich;5475;6570
+AP;Alkalische Phosphatase;U/l;1;weiblich;5475;6570
+AP;Alkalische Phosphatase;U/l;1;männlich;6570;36500
+AP;Alkalische Phosphatase;U/l;1;weiblich;6570;36500

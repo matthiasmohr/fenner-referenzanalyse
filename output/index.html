@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Referenzanalyse – Übersicht</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; font-size: 14px; color: #1f2937;
+         background: #f9fafb; padding: 2rem; }
+  h1   { font-size: 1.4rem; font-weight: 700; margin-bottom: .25rem; }
+  .meta { color: #6b7280; font-size: .8rem; margin-bottom: 2rem; }
+  section { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+            padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+  h2   { font-size: 1rem; font-weight: 600; margin-bottom: .75rem; }
+  .unit { font-weight: 400; color: #6b7280; font-size: .85em; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: .45rem .6rem; text-align: left; border-bottom: 1px solid #f3f4f6; }
+  th     { background: #f9fafb; font-weight: 600; font-size: .8rem;
+           text-transform: uppercase; letter-spacing: .04em; color: #6b7280; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f9fafb; }
+  .num   { text-align: right; font-variant-numeric: tabular-nums; }
+  .links { white-space: nowrap; }
+  .links a { display: inline-block; padding: .2rem .55rem; border-radius: 4px;
+             font-size: .78rem; font-weight: 600; text-decoration: none;
+             margin-right: .3rem; border: 1px solid; }
+  .links a[href$=".html"] { color: #2563eb; border-color: #bfdbfe; background: #eff6ff; }
+  .links a[href$=".pdf"]  { color: #059669; border-color: #a7f3d0; background: #ecfdf5; }
+  .links a:hover { opacity: .75; }
+  .r2-good { color: #059669; font-weight: 600; }
+  .r2-warn { color: #d97706; font-weight: 600; }
+  .r2-bad  { color: #dc2626; font-weight: 600; }
+  .badge-log { display: inline-block; padding: .1rem .4rem; border-radius: 3px;
+               font-size: .75rem; font-weight: 600; }
+  .log1 { background: #fef3c7; color: #92400e; }
+  .log0 { background: #f3f4f6; color: #6b7280; }
+  .skipped-section { border-color: #fcd34d; background: #fffbeb; }
+  .skipped-section h2 { color: #92400e; }
+  .skip-count { display: inline-block; background: #fcd34d; color: #78350f;
+                border-radius: 9999px; padding: 0 .5rem; font-size: .75rem;
+                margin-left: .4rem; vertical-align: middle; }
+  .skip-reason { color: #b45309; font-size: .85em; }
+</style>
+</head>
+<body>
+<div id="pw-overlay" style="position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.88);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:white;border-radius:12px;padding:36px 40px;max-width:360px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.45);text-align:center;">
+    <div style="background:#1e3a5f;color:white;border-radius:8px;padding:14px 20px;margin-bottom:24px;">
+      <div style="font-size:1.15rem;font-weight:700;">Hoffmann Referenzanalyse</div>
+      <div style="font-size:.8rem;opacity:.7;margin-top:3px;">Fenner Heidrich Limbach</div>
+    </div>
+    <input id="pw-input" type="password" placeholder="Passwort" autocomplete="current-password"
+           style="width:100%;padding:10px 14px;border:1px solid #cbd5e0;border-radius:6px;font-size:.95rem;outline:none;margin-bottom:10px;box-sizing:border-box;">
+    <div id="pw-error" style="color:#dc2626;font-size:.82rem;min-height:18px;margin-bottom:8px;"></div>
+    <button onclick="checkPw()" style="width:100%;padding:10px;background:#1e3a5f;color:white;border:none;border-radius:6px;font-size:.95rem;font-weight:600;cursor:pointer;">Anmelden</button>
+  </div>
+</div>
+<script>
+(function(){
+  if(sessionStorage.getItem('hoffmann_auth')==='1'){
+    document.getElementById('pw-overlay').style.display='none';return;
+  }
+  document.getElementById('pw-input').addEventListener('keydown',function(e){if(e.key==='Enter')checkPw();});
+  setTimeout(function(){document.getElementById('pw-input').focus();},100);
+})();
+function checkPw(){
+  if(document.getElementById('pw-input').value==='hoffmann4fenner'){
+    sessionStorage.setItem('hoffmann_auth','1');
+    document.getElementById('pw-overlay').style.display='none';
+  }else{
+    document.getElementById('pw-error').textContent='Falsches Passwort.';
+    document.getElementById('pw-input').value='';
+    document.getElementById('pw-input').focus();
+  }
+}
+</script>
+<h1>Hoffmann Referenzanalyse – Übersicht</h1>
+<p class="meta">Erstellt am 6.5.2026, 22:32:19 · 107 Gruppe(n) · 18 Analyt(en) · 10 übersprungen</p>
+
+  <section>
+    <h2>Alkalische Phosphatase <span class="unit">[U/l]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>1 T – 15 T</td>
+        <td class="num">35</td>
+        <td class="num">107,66 – 529,42</td>
+        <td class="num r2-warn">95.1%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AP_1d-15d.html" target="_blank">HTML</a>
+          <a href="AP_1d-15d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>15 T – 1 J</td>
+        <td class="num">538</td>
+        <td class="num">153,98 – 854,36</td>
+        <td class="num r2-good">99.2%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AP_15d-365d.html" target="_blank">HTML</a>
+          <a href="AP_15d-365d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>1 J – 3 J</td>
+        <td class="num">260</td>
+        <td class="num">136,26 – 432,05</td>
+        <td class="num r2-good">99.6%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AP_männlich_365d-1095d.html" target="_blank">HTML</a>
+          <a href="AP_männlich_365d-1095d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>1 J – 3 J</td>
+        <td class="num">232</td>
+        <td class="num">135,23 – 498,71</td>
+        <td class="num r2-warn">97.7%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AP_weiblich_365d-1095d.html" target="_blank">HTML</a>
+          <a href="AP_weiblich_365d-1095d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>3 J – 6 J</td>
+        <td class="num">338</td>
+        <td class="num">138,19 – 415,46</td>
+        <td class="num r2-good">99.7%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AP_männlich_1095d-2190d.html" target="_blank">HTML</a>
+          <a href="AP_männlich_1095d-2190d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>3 J – 6 J</td>
+        <td class="num">308</td>
+        <td class="num">126,42 – 416,58</td>
+        <td class="num r2-good">99.2%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AP_weiblich_1095d-2190d.html" target="_blank">HTML</a>
+          <a href="AP_weiblich_1095d-2190d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>6 J – 10 J</td>
+        <td class="num">592</td>
+        <td class="num">143,67 – 423,49</td>
+        <td class="num r2-good">99.8%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AP_männlich_2190d-3650d.html" target="_blank">HTML</a>
+          <a href="AP_männlich_2190d-3650d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>6 J – 10 J</td>
+        <td class="num">629</td>
+        <td class="num">143,07 – 479,53</td>
+        <td class="num r2-good">99.5%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AP_weiblich_2190d-3650d.html" target="_blank">HTML</a>
+          <a href="AP_weiblich_2190d-3650d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>10 J – 13 J</td>
+        <td class="num">679</td>
+        <td class="num">138,01 – 509,97</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AP_männlich_3650d-4745d.html" target="_blank">HTML</a>
+          <a href="AP_männlich_3650d-4745d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>10 J – 13 J</td>
+        <td class="num">703</td>
+        <td class="num">125,65 – 496,45</td>
+        <td class="num r2-good">99.8%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AP_weiblich_3650d-4745d.html" target="_blank">HTML</a>
+          <a href="AP_weiblich_3650d-4745d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>13 J – 15 J</td>
+        <td class="num">578</td>
+        <td class="num">142,70 – 580,97</td>
+        <td class="num r2-good">99.8%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AP_männlich_4745d-5475d.html" target="_blank">HTML</a>
+          <a href="AP_männlich_4745d-5475d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>13 J – 15 J</td>
+        <td class="num">671</td>
+        <td class="num">46,87 – 379,75</td>
+        <td class="num r2-good">99.3%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AP_weiblich_4745d-5475d.html" target="_blank">HTML</a>
+          <a href="AP_weiblich_4745d-5475d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>15 J – 18 J</td>
+        <td class="num">1018</td>
+        <td class="num">48,29 – 378,02</td>
+        <td class="num r2-good">99.7%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AP_männlich_5475d-6570d.html" target="_blank">HTML</a>
+          <a href="AP_männlich_5475d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>15 J – 18 J</td>
+        <td class="num">1206</td>
+        <td class="num">50,04 – 154,54</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AP_weiblich_5475d-6570d.html" target="_blank">HTML</a>
+          <a href="AP_weiblich_5475d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">8247</td>
+        <td class="num">49,99 – 224,17</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AP_männlich_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="AP_männlich_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">7952</td>
+        <td class="num">46,88 – 207,73</td>
+        <td class="num r2-good">99.8%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AP_weiblich_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="AP_weiblich_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Amylase <span class="unit">[U/l]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>1 T – 6 Mo</td>
+        <td class="num">55</td>
+        <td class="num">1,60 – 44,93</td>
+        <td class="num r2-warn">98.6%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AMY_1d-183d.html" target="_blank">HTML</a>
+          <a href="AMY_1d-183d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>6 Mo – 1 J</td>
+        <td class="num">33</td>
+        <td class="num">3,72 – 91,01</td>
+        <td class="num r2-warn">95.7%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AMY_183d-365d.html" target="_blank">HTML</a>
+          <a href="AMY_183d-365d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>1 J – 9 J</td>
+        <td class="num">490</td>
+        <td class="num">19,09 – 129,28</td>
+        <td class="num r2-good">99.8%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AMY_365d-3285d.html" target="_blank">HTML</a>
+          <a href="AMY_365d-3285d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>9 J – 18 J</td>
+        <td class="num">1385 (1 ≤ 0 ausgeschlossen)</td>
+        <td class="num">19,25 – 111,75</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AMY_3285d-6570d.html" target="_blank">HTML</a>
+          <a href="AMY_3285d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">2089</td>
+        <td class="num">12,40 – 156,28</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="AMY_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="AMY_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>CK gesamt <span class="unit">[U/l]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>1 T – 6 Mo</td>
+        <td class="num">87</td>
+        <td class="num">42,67 – 412,09</td>
+        <td class="num r2-warn">97.8%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="CK_1d-183d.html" target="_blank">HTML</a>
+          <a href="CK_1d-183d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>6 Mo – 2 J</td>
+        <td class="num">158</td>
+        <td class="num">25,13 – 533,44</td>
+        <td class="num r2-good">99.5%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="CK_183d-730d.html" target="_blank">HTML</a>
+          <a href="CK_183d-730d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>2 J – 9 J</td>
+        <td class="num">368</td>
+        <td class="num">31,68 – 486,52</td>
+        <td class="num r2-good">99.3%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="CK_männlich_730d-3285d.html" target="_blank">HTML</a>
+          <a href="CK_männlich_730d-3285d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>2 J – 9 J</td>
+        <td class="num">252</td>
+        <td class="num">34,28 – 318,79</td>
+        <td class="num r2-good">99.3%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="CK_weiblich_730d-3285d.html" target="_blank">HTML</a>
+          <a href="CK_weiblich_730d-3285d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>9 J – 14 J</td>
+        <td class="num">335</td>
+        <td class="num">45,55 – 284,03</td>
+        <td class="num r2-good">99.8%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="CK_männlich_3285d-5110d.html" target="_blank">HTML</a>
+          <a href="CK_männlich_3285d-5110d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>9 J – 14 J</td>
+        <td class="num">432</td>
+        <td class="num">41,05 – 258,76</td>
+        <td class="num r2-good">99.5%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="CK_weiblich_3285d-5110d.html" target="_blank">HTML</a>
+          <a href="CK_weiblich_3285d-5110d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>14 J – 18 J</td>
+        <td class="num">469</td>
+        <td class="num">45,23 – 540,92</td>
+        <td class="num r2-good">99.4%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="CK_männlich_5110d-6570d.html" target="_blank">HTML</a>
+          <a href="CK_männlich_5110d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>14 J – 18 J</td>
+        <td class="num">596</td>
+        <td class="num">35,83 – 213,08</td>
+        <td class="num r2-good">99.8%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="CK_weiblich_5110d-6570d.html" target="_blank">HTML</a>
+          <a href="CK_weiblich_5110d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Eisen <span class="unit">[µg/dl]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>1 T – 1 J</td>
+        <td class="num">33</td>
+        <td class="num">1,89 – 32,54</td>
+        <td class="num r2-warn">98.2%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="FE_1d-365d.html" target="_blank">HTML</a>
+          <a href="FE_1d-365d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>1 J – 3 J</td>
+        <td class="num">84</td>
+        <td class="num">1,69 – 24,32</td>
+        <td class="num r2-warn">98.4%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="FE_365d-1095d.html" target="_blank">HTML</a>
+          <a href="FE_365d-1095d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>3 J – 18 J</td>
+        <td class="num">1740</td>
+        <td class="num">4,97 – 28,48</td>
+        <td class="num r2-good">99.5%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="FE_1095d-6570d.html" target="_blank">HTML</a>
+          <a href="FE_1095d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">5838</td>
+        <td class="num">2,04 – 61,41</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="FE_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="FE_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Ferritin <span class="unit">[µg/l]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>15 T – 1 J</td>
+        <td class="num">109</td>
+        <td class="num">4,44 – 1.822,71</td>
+        <td class="num r2-good">99.0%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="FERR_15d-365d.html" target="_blank">HTML</a>
+          <a href="FERR_15d-365d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>1 J – 5 J</td>
+        <td class="num">397</td>
+        <td class="num">4,44 – 243,42</td>
+        <td class="num r2-good">99.2%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="FERR_365d-1826d.html" target="_blank">HTML</a>
+          <a href="FERR_365d-1826d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>5 J – 10 J</td>
+        <td class="num">726</td>
+        <td class="num">7,33 – 123,29</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="FERR_1826d-3650d.html" target="_blank">HTML</a>
+          <a href="FERR_1826d-3650d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>10 J – 15 J</td>
+        <td class="num">555 (1 ≤ 0 ausgeschlossen)</td>
+        <td class="num">6,87 – 174,74</td>
+        <td class="num r2-good">99.4%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="FERR_männlich_3650d-5475d.html" target="_blank">HTML</a>
+          <a href="FERR_männlich_3650d-5475d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>10 J – 15 J</td>
+        <td class="num">660</td>
+        <td class="num">4,85 – 148,48</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="FERR_weiblich_3650d-5475d.html" target="_blank">HTML</a>
+          <a href="FERR_weiblich_3650d-5475d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>15 J – 18 J</td>
+        <td class="num">501</td>
+        <td class="num">6,51 – 211,70</td>
+        <td class="num r2-good">99.7%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="FERR_männlich_5475d-6570d.html" target="_blank">HTML</a>
+          <a href="FERR_männlich_5475d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>15 J – 18 J</td>
+        <td class="num">534</td>
+        <td class="num">3,80 – 155,56</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="FERR_weiblich_5475d-6570d.html" target="_blank">HTML</a>
+          <a href="FERR_weiblich_5475d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">38</td>
+        <td class="num">13,90 – 753,76</td>
+        <td class="num r2-warn">98.4%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="FERR_männlich_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="FERR_männlich_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">77</td>
+        <td class="num">5,69 – 293,20</td>
+        <td class="num r2-good">99.3%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="FERR_weiblich_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="FERR_weiblich_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Gamma - GT <span class="unit">[U/l]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>1 T – 15 T</td>
+        <td class="num">111</td>
+        <td class="num">30,30 – 515,47</td>
+        <td class="num r2-good">99.4%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="GGT_1d-15d.html" target="_blank">HTML</a>
+          <a href="GGT_1d-15d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>15 T – 1 J</td>
+        <td class="num">566 (2 ≤ 0 ausgeschlossen)</td>
+        <td class="num">3,32 – 416,98</td>
+        <td class="num r2-warn">98.6%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="GGT_15d-365d.html" target="_blank">HTML</a>
+          <a href="GGT_15d-365d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>1 J – 6 J</td>
+        <td class="num">1685 (3 ≤ 0 ausgeschlossen)</td>
+        <td class="num">4,53 – 29,49</td>
+        <td class="num r2-warn">98.3%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="GGT_365d-2190d.html" target="_blank">HTML</a>
+          <a href="GGT_365d-2190d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>6 J – 15 J</td>
+        <td class="num">5608 (1 ≤ 0 ausgeschlossen)</td>
+        <td class="num">7,66 – 30,41</td>
+        <td class="num r2-good">99.1%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="GGT_2190d-5475d.html" target="_blank">HTML</a>
+          <a href="GGT_2190d-5475d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>15 J – 18 J</td>
+        <td class="num">3186</td>
+        <td class="num">8,46 – 37,36</td>
+        <td class="num r2-good">99.2%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="GGT_5475d-6570d.html" target="_blank">HTML</a>
+          <a href="GGT_5475d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">32815 (1 ≤ 0 ausgeschlossen)</td>
+        <td class="num">1,77 – 811,68</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="GGT_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="GGT_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>GOT (AST) <span class="unit">[U/l]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>1 T – 15 T</td>
+        <td class="num">158</td>
+        <td class="num">16,11 – 155,44</td>
+        <td class="num r2-warn">96.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="GOT_1d-15d.html" target="_blank">HTML</a>
+          <a href="GOT_1d-15d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>15 T – 1 J</td>
+        <td class="num">708</td>
+        <td class="num">19,24 – 93,07</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="GOT_15d-365d.html" target="_blank">HTML</a>
+          <a href="GOT_15d-365d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>1 J – 6 J</td>
+        <td class="num">1928</td>
+        <td class="num">18,39 – 65,89</td>
+        <td class="num r2-good">99.8%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="GOT_365d-2190d.html" target="_blank">HTML</a>
+          <a href="GOT_365d-2190d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>6 J – 15 J</td>
+        <td class="num">5918</td>
+        <td class="num">11,81 – 50,29</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="GOT_2190d-5475d.html" target="_blank">HTML</a>
+          <a href="GOT_2190d-5475d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>15 J – 18 J</td>
+        <td class="num">3282 (1 ≤ 0 ausgeschlossen)</td>
+        <td class="num">9,69 – 44,57</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="GOT_5475d-6570d.html" target="_blank">HTML</a>
+          <a href="GOT_5475d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">25185 (1 ≤ 0 ausgeschlossen)</td>
+        <td class="num">11,19 – 57,03</td>
+        <td class="num r2-good">99.0%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="GOT_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="GOT_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Harnsäure <span class="unit">[mg/dl]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>15 T – 1 J</td>
+        <td class="num">81</td>
+        <td class="num">1,78 – 5,60</td>
+        <td class="num r2-warn">98.6%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="HS_15d-365d.html" target="_blank">HTML</a>
+          <a href="HS_15d-365d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>1 J – 6 J</td>
+        <td class="num">482</td>
+        <td class="num">2,02 – 6,12</td>
+        <td class="num r2-good">99.6%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="HS_365d-2190d.html" target="_blank">HTML</a>
+          <a href="HS_365d-2190d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>6 J – 15 J</td>
+        <td class="num">2018</td>
+        <td class="num">2,17 – 6,78</td>
+        <td class="num r2-good">99.6%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="HS_2190d-5475d.html" target="_blank">HTML</a>
+          <a href="HS_2190d-5475d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>15 J – 18 J</td>
+        <td class="num">616</td>
+        <td class="num">3,47 – 8,21</td>
+        <td class="num r2-good">99.1%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="HS_männlich_5475d-6570d.html" target="_blank">HTML</a>
+          <a href="HS_männlich_5475d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>15 J – 18 J</td>
+        <td class="num">675</td>
+        <td class="num">2,40 – 6,05</td>
+        <td class="num r2-good">99.7%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="HS_weiblich_5475d-6570d.html" target="_blank">HTML</a>
+          <a href="HS_weiblich_5475d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">1948</td>
+        <td class="num">3,18 – 9,77</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="HS_männlich_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="HS_männlich_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">2931</td>
+        <td class="num">2,44 – 7,78</td>
+        <td class="num r2-good">99.8%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="HS_weiblich_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="HS_weiblich_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Harnstoff <span class="unit">[mg/dl]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>1 T – 15 T</td>
+        <td class="num">93</td>
+        <td class="num">-69,61 – 100,58</td>
+        <td class="num r2-warn">98.3%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="HST_1d-15d.html" target="_blank">HTML</a>
+          <a href="HST_1d-15d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>15 T – 1 J</td>
+        <td class="num">548</td>
+        <td class="num">8,63 – 38,68</td>
+        <td class="num r2-good">99.1%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="HST_15d-365d.html" target="_blank">HTML</a>
+          <a href="HST_15d-365d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>1 J – 10 J</td>
+        <td class="num">2614</td>
+        <td class="num">11,09 – 47,17</td>
+        <td class="num r2-good">99.1%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="HST_365d-3650d.html" target="_blank">HTML</a>
+          <a href="HST_365d-3650d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>10 J – 18 J</td>
+        <td class="num">3976</td>
+        <td class="num">8,95 – 41,51</td>
+        <td class="num r2-warn">98.7%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="HST_3650d-6570d.html" target="_blank">HTML</a>
+          <a href="HST_3650d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">33544</td>
+        <td class="num">9,73 – 68,25</td>
+        <td class="num r2-warn">98.6%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="HST_männlich_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="HST_männlich_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">30748</td>
+        <td class="num">7,51 – 60,79</td>
+        <td class="num r2-warn">98.3%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="HST_weiblich_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="HST_weiblich_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Laktat <span class="unit">[mmol/l]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>15 T – 1 J</td>
+        <td class="num">22</td>
+        <td class="num">1,14 – 4,16</td>
+        <td class="num r2-bad">90.6%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="LACT_15d-365d.html" target="_blank">HTML</a>
+          <a href="LACT_15d-365d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>1 J – 10 J</td>
+        <td class="num">49</td>
+        <td class="num">0,61 – 4,84</td>
+        <td class="num r2-warn">95.8%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="LACT_365d-3650d.html" target="_blank">HTML</a>
+          <a href="LACT_365d-3650d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>10 J – 18 J</td>
+        <td class="num">23</td>
+        <td class="num">0,36 – 5,10</td>
+        <td class="num r2-bad">87.7%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="LACT_3650d-6570d.html" target="_blank">HTML</a>
+          <a href="LACT_3650d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">26</td>
+        <td class="num">0,38 – 11,92</td>
+        <td class="num r2-warn">98.5%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="LACT_männlich_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="LACT_männlich_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">23</td>
+        <td class="num">0,41 – 8,44</td>
+        <td class="num r2-warn">97.5%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="LACT_weiblich_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="LACT_weiblich_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>LDH <span class="unit">[U/l]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>1 T – 15 T</td>
+        <td class="num">54</td>
+        <td class="num">172,54 – 1.533,95</td>
+        <td class="num r2-good">99.0%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="LDH_1d-15d.html" target="_blank">HTML</a>
+          <a href="LDH_1d-15d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>15 T – 1 J</td>
+        <td class="num">150</td>
+        <td class="num">175,71 – 459,80</td>
+        <td class="num r2-warn">98.5%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="LDH_15d-365d.html" target="_blank">HTML</a>
+          <a href="LDH_15d-365d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>1 J – 6 J</td>
+        <td class="num">597</td>
+        <td class="num">171,92 – 376,18</td>
+        <td class="num r2-good">99.8%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="LDH_365d-2190d.html" target="_blank">HTML</a>
+          <a href="LDH_365d-2190d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>6 J – 15 J</td>
+        <td class="num">2309</td>
+        <td class="num">127,58 – 337,20</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="LDH_2190d-5475d.html" target="_blank">HTML</a>
+          <a href="LDH_2190d-5475d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>15 J – 18 J</td>
+        <td class="num">687</td>
+        <td class="num">100,44 – 302,28</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="LDH_männlich_5475d-6570d.html" target="_blank">HTML</a>
+          <a href="LDH_männlich_5475d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>15 J – 18 J</td>
+        <td class="num">852</td>
+        <td class="num">109,27 – 267,03</td>
+        <td class="num r2-good">99.5%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="LDH_weiblich_5475d-6570d.html" target="_blank">HTML</a>
+          <a href="LDH_weiblich_5475d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">5673</td>
+        <td class="num">122,21 – 329,80</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="LDH_männlich_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="LDH_männlich_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">5367</td>
+        <td class="num">129,21 – 326,58</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log1" title="Logarithmische Transformation">log</span></td>
+        <td class="links">
+          <a href="LDH_weiblich_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="LDH_weiblich_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Magnesium <span class="unit">[mmol/l]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>1 T – 15 T</td>
+        <td class="num">47</td>
+        <td class="num">0,62 – 1,03</td>
+        <td class="num r2-warn">97.0%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="MG_1d-15d.html" target="_blank">HTML</a>
+          <a href="MG_1d-15d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>15 T – 1 J</td>
+        <td class="num">308</td>
+        <td class="num">0,74 – 1,05</td>
+        <td class="num r2-good">99.6%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="MG_15d-365d.html" target="_blank">HTML</a>
+          <a href="MG_15d-365d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>1 J – 18 J</td>
+        <td class="num">4910</td>
+        <td class="num">0,70 – 1,00</td>
+        <td class="num r2-good">99.7%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="MG_365d-6570d.html" target="_blank">HTML</a>
+          <a href="MG_365d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">3074</td>
+        <td class="num">0,56 – 1,07</td>
+        <td class="num r2-good">99.6%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="MG_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="MG_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Natrium <span class="unit">[mmol/l]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>1 T – 18 J</td>
+        <td class="num">12376</td>
+        <td class="num">134,27 – 145,26</td>
+        <td class="num r2-warn">97.4%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="NA_1d-6570d.html" target="_blank">HTML</a>
+          <a href="NA_1d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">95191</td>
+        <td class="num">133,23 – 148,20</td>
+        <td class="num r2-warn">98.3%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="NA_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="NA_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Kalium <span class="unit">[mmol/l]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>1 T – 18 J</td>
+        <td class="num">12288</td>
+        <td class="num">3,43 – 5,12</td>
+        <td class="num r2-warn">98.0%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="K_1d-6570d.html" target="_blank">HTML</a>
+          <a href="K_1d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">93109</td>
+        <td class="num">3,32 – 5,30</td>
+        <td class="num r2-good">99.3%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="K_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="K_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Chlorid <span class="unit">[mmol/l]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>1 T – 18 J</td>
+        <td class="num">4550</td>
+        <td class="num">97,89 – 107,88</td>
+        <td class="num r2-warn">96.5%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="CL_1d-6570d.html" target="_blank">HTML</a>
+          <a href="CL_1d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">3888</td>
+        <td class="num">96,25 – 112,11</td>
+        <td class="num r2-warn">98.1%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="CL_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="CL_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Phosphor anorg. <span class="unit">[mmol/l]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>1 T – 15 T</td>
+        <td class="num">59</td>
+        <td class="num">1,37 – 2,97</td>
+        <td class="num r2-warn">98.1%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="PO4_1d-15d.html" target="_blank">HTML</a>
+          <a href="PO4_1d-15d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>15 T – 1 J</td>
+        <td class="num">528</td>
+        <td class="num">1,37 – 2,50</td>
+        <td class="num r2-warn">97.7%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="PO4_15d-365d.html" target="_blank">HTML</a>
+          <a href="PO4_15d-365d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>1 J – 6 J</td>
+        <td class="num">1237</td>
+        <td class="num">1,16 – 2,12</td>
+        <td class="num r2-warn">96.9%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="PO4_365d-2190d.html" target="_blank">HTML</a>
+          <a href="PO4_365d-2190d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>6 J – 15 J</td>
+        <td class="num">3324</td>
+        <td class="num">1,08 – 2,04</td>
+        <td class="num r2-warn">97.2%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="PO4_2190d-5475d.html" target="_blank">HTML</a>
+          <a href="PO4_2190d-5475d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>15 J – 18 J</td>
+        <td class="num">1698</td>
+        <td class="num">0,92 – 1,81</td>
+        <td class="num r2-warn">97.2%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="PO4_5475d-6570d.html" target="_blank">HTML</a>
+          <a href="PO4_5475d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">6510</td>
+        <td class="num">0,70 – 1,57</td>
+        <td class="num r2-warn">97.1%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="PO4_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="PO4_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Gesamteiweiß <span class="unit">[g/dl]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>15 T – 1 J</td>
+        <td class="num">71</td>
+        <td class="num">26,85 – 78,17</td>
+        <td class="num r2-good">99.6%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="GES_15d-365d.html" target="_blank">HTML</a>
+          <a href="GES_15d-365d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>1 J – 18 J</td>
+        <td class="num">1788</td>
+        <td class="num">62,72 – 85,41</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="GES_365d-6570d.html" target="_blank">HTML</a>
+          <a href="GES_365d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>18 J – 65 J</td>
+        <td class="num">2174</td>
+        <td class="num">42,84 – 101,61</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="GES_6570d-23725d.html" target="_blank">HTML</a>
+          <a href="GES_6570d-23725d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Transferrin <span class="unit">[g/l]</span></h2>
+    <table>
+      <thead><tr>
+        <th>Geschlecht</th><th>Altersgruppe</th><th>n</th>
+        <th>Referenzintervall</th><th>R²</th><th>Skala</th><th>Dateien</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>Alle</td>
+        <td>15 T – 1 J</td>
+        <td class="num">24</td>
+        <td class="num">0,65 – 3,46</td>
+        <td class="num r2-warn">95.8%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="TRAF_15d-365d.html" target="_blank">HTML</a>
+          <a href="TRAF_15d-365d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Alle</td>
+        <td>1 J – 10 J</td>
+        <td class="num">186</td>
+        <td class="num">1,83 – 3,66</td>
+        <td class="num r2-good">99.6%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="TRAF_365d-3650d.html" target="_blank">HTML</a>
+          <a href="TRAF_365d-3650d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>10 J – 15 J</td>
+        <td class="num">60</td>
+        <td class="num">1,98 – 3,78</td>
+        <td class="num r2-warn">98.4%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="TRAF_männlich_3650d-5475d.html" target="_blank">HTML</a>
+          <a href="TRAF_männlich_3650d-5475d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>10 J – 15 J</td>
+        <td class="num">139</td>
+        <td class="num">1,89 – 3,87</td>
+        <td class="num r2-good">99.5%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="TRAF_weiblich_3650d-5475d.html" target="_blank">HTML</a>
+          <a href="TRAF_weiblich_3650d-5475d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>15 J – 18 J</td>
+        <td class="num">68</td>
+        <td class="num">1,76 – 3,80</td>
+        <td class="num r2-warn">98.6%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="TRAF_männlich_5475d-6570d.html" target="_blank">HTML</a>
+          <a href="TRAF_männlich_5475d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>15 J – 18 J</td>
+        <td class="num">98</td>
+        <td class="num">1,78 – 4,04</td>
+        <td class="num r2-warn">97.1%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="TRAF_weiblich_5475d-6570d.html" target="_blank">HTML</a>
+          <a href="TRAF_weiblich_5475d-6570d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♂</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">1186</td>
+        <td class="num">0,45 – 3,10</td>
+        <td class="num r2-good">99.8%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="TRAF_männlich_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="TRAF_männlich_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>♀</td>
+        <td>18 J – 99.9 J</td>
+        <td class="num">2022</td>
+        <td class="num">0,56 – 3,35</td>
+        <td class="num r2-good">99.9%</td>
+        <td><span class="badge-log log0" title="Lineare Skala">lin</span></td>
+        <td class="links">
+          <a href="TRAF_weiblich_6570d-36500d.html" target="_blank">HTML</a>
+          <a href="TRAF_weiblich_6570d-36500d.pdf"  target="_blank">PDF</a>
+        </td>
+      </tr></tbody>
+    </table>
+  </section>
+
+  <section class="skipped-section">
+    <h2>⚠ Übersprungene Analysen <span class="skip-count">10</span></h2>
+    <table>
+      <thead><tr>
+        <th>Analyt</th><th>Geschlecht</th><th>Altersgruppe</th><th>Grund</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td>Bilirubin direkt</td>
+          <td>Alle</td>
+          <td>1 T – 6 Mo</td>
+          <td class="skip-reason">Nur 0 Werte (min. 20 erforderlich)</td>
+        </tr>
+        <tr>
+          <td>Bilirubin direkt</td>
+          <td>Alle</td>
+          <td>6 Mo – 1 J</td>
+          <td class="skip-reason">Nur 0 Werte (min. 20 erforderlich)</td>
+        </tr>
+        <tr>
+          <td>Bilirubin direkt</td>
+          <td>Alle</td>
+          <td>1 J – 9 J</td>
+          <td class="skip-reason">Nur 0 Werte (min. 20 erforderlich)</td>
+        </tr>
+        <tr>
+          <td>Bilirubin direkt</td>
+          <td>Alle</td>
+          <td>9 J – 18 J</td>
+          <td class="skip-reason">Nur 0 Werte (min. 20 erforderlich)</td>
+        </tr>
+        <tr>
+          <td>Bilirubin direkt</td>
+          <td>Alle</td>
+          <td>18 J – 99.9 J</td>
+          <td class="skip-reason">Nur 0 Werte (min. 20 erforderlich)</td>
+        </tr>
+        <tr>
+          <td>Ferritin</td>
+          <td>Alle</td>
+          <td>1 T – 15 T</td>
+          <td class="skip-reason">Nur 0 Werte (min. 20 erforderlich)</td>
+        </tr>
+        <tr>
+          <td>Harnsäure</td>
+          <td>Alle</td>
+          <td>1 T – 15 T</td>
+          <td class="skip-reason">Nur 12 Werte (min. 20 erforderlich)</td>
+        </tr>
+        <tr>
+          <td>Laktat</td>
+          <td>Alle</td>
+          <td>1 T – 15 T</td>
+          <td class="skip-reason">Nur 3 Werte (min. 20 erforderlich)</td>
+        </tr>
+        <tr>
+          <td>Gesamteiweiß</td>
+          <td>Alle</td>
+          <td>1 T – 15 T</td>
+          <td class="skip-reason">Nur 6 Werte (min. 20 erforderlich)</td>
+        </tr>
+        <tr>
+          <td>Transferrin</td>
+          <td>Alle</td>
+          <td>1 T – 15 T</td>
+          <td class="skip-reason">Nur 2 Werte (min. 20 erforderlich)</td>
+        </tr></tbody>
+    </table>
+  </section>
+</body>
+</html>
