@@ -378,6 +378,7 @@ function buildIndex(outPath, rows, skipped = []) {
 </style>
 </head>
 <body>
+<style>@media print{#pw-overlay{display:none!important}}</style>
 <div id="pw-overlay" style="position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.88);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
   <div style="background:white;border-radius:12px;padding:36px 40px;max-width:360px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.45);text-align:center;">
     <div style="background:#1e3a5f;color:white;border-radius:8px;padding:14px 20px;margin-bottom:24px;">
@@ -392,7 +393,7 @@ function buildIndex(outPath, rows, skipped = []) {
 </div>
 <script>
 (function(){
-  if(sessionStorage.getItem('hoffmann_auth')==='1'){
+  if(localStorage.getItem('hoffmann_auth')==='1'){
     document.getElementById('pw-overlay').style.display='none';return;
   }
   document.getElementById('pw-input').addEventListener('keydown',function(e){if(e.key==='Enter')checkPw();});
@@ -400,7 +401,7 @@ function buildIndex(outPath, rows, skipped = []) {
 })();
 function checkPw(){
   if(document.getElementById('pw-input').value==='hoffmann4fenner'){
-    sessionStorage.setItem('hoffmann_auth','1');
+    localStorage.setItem('hoffmann_auth','1');
     document.getElementById('pw-overlay').style.display='none';
   }else{
     document.getElementById('pw-error').textContent='Falsches Passwort.';
