@@ -213,6 +213,36 @@
   </style>
 </head>
 <body>
+<div id="pw-overlay" style="position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.88);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:white;border-radius:12px;padding:36px 40px;max-width:360px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.45);text-align:center;">
+    <div style="background:#1e3a5f;color:white;border-radius:8px;padding:14px 20px;margin-bottom:24px;">
+      <div style="font-size:1.15rem;font-weight:700;">Hoffmann Referenzanalyse</div>
+      <div style="font-size:.8rem;opacity:.7;margin-top:3px;">Fenner Heidrich Limbach</div>
+    </div>
+    <input id="pw-input" type="password" placeholder="Passwort" autocomplete="current-password" style="width:100%;padding:10px 14px;border:1px solid #cbd5e0;border-radius:6px;font-size:.95rem;outline:none;margin-bottom:10px;box-sizing:border-box;">
+    <div id="pw-error" style="color:#dc2626;font-size:.82rem;min-height:18px;margin-bottom:8px;"></div>
+    <button onclick="checkPw()" style="width:100%;padding:10px;background:#1e3a5f;color:white;border:none;border-radius:6px;font-size:.95rem;font-weight:600;cursor:pointer;">Anmelden</button>
+  </div>
+</div>
+<script>
+(function(){
+  if(sessionStorage.getItem('hoffmann_auth')==='1'){
+    document.getElementById('pw-overlay').style.display='none';return;
+  }
+  document.getElementById('pw-input').addEventListener('keydown',function(e){if(e.key==='Enter')checkPw();});
+  setTimeout(function(){document.getElementById('pw-input').focus();},100);
+})();
+function checkPw(){
+  if(document.getElementById('pw-input').value==='hoffmann4fenner'){
+    sessionStorage.setItem('hoffmann_auth','1');
+    document.getElementById('pw-overlay').style.display='none';
+  }else{
+    document.getElementById('pw-error').textContent='Falsches Passwort.';
+    document.getElementById('pw-input').value='';
+    document.getElementById('pw-input').focus();
+  }
+}
+</script>
 <div class="container">
 
   <header>
@@ -259,7 +289,7 @@ oder eine Zahl pro Zeile"></textarea>
         <div>
           <div style="font-size:1.2rem; font-weight:700;" id="printTitle">Magnesium (MG) — 1 Tage – 15 Tage (mmol/l)</div>
           <div style="color:#6b7280; font-size:.82rem; margin-top:3px;" id="printFilter">Gruppe: 1 Tage – 15 Tage</div>
-          <div style="color:#6b7280; font-size:.82rem; margin-top:1px;" id="printMeta">Erstellt am 6.5.2026, 22:31:28 · n = 47 Messwerte</div>
+          <div style="color:#6b7280; font-size:.82rem; margin-top:1px;" id="printMeta">Erstellt am 20.5.2026, 11:23:39 · n = 47 Messwerte</div>
         </div>
         <div style="text-align:right; font-size:.78rem; color:#6b7280;">
           Methode: Hoffmann-Verfahren (1963)<br>
@@ -365,7 +395,7 @@ oder eine Zahl pro Zeile"></textarea>
     </div>
 
     <!-- Originaldaten (versteckt, für Reproduzierbarkeit im gespeicherten HTML) -->
-    <div id="originalData" style="display:none;">{"name":"Magnesium (MG) — 1 Tage – 15 Tage","unit":"mmol/l","log":false,"values":[0.8,0.84,0.79,0.76,0.81,0.74,0.83,0.96,0.82,1.3,0.56,0.83,0.78,0.78,0.99,1.58,0.91,0.66,0.81,0.68,0.93,0.92,0.89,0.91,0.79,0.82,0.76,0.82,0.75,0.68,0.83,0.9,0.83,0.68,0.7,0.78,0.81,0.7,0.81,0.97,0.93,0.89,0.8,0.75,0.79,0.87,1.03],"timestamp":"2026-05-06T20:31:28.716Z"}</div>
+    <div id="originalData" style="display:none;">{"name":"Magnesium (MG) — 1 Tage – 15 Tage","unit":"mmol/l","log":false,"values":[0.8,0.84,0.79,0.76,0.81,0.74,0.83,0.96,0.82,1.3,0.56,0.83,0.78,0.78,0.99,1.58,0.91,0.66,0.81,0.68,0.93,0.92,0.89,0.91,0.79,0.82,0.76,0.82,0.75,0.68,0.83,0.9,0.83,0.68,0.7,0.78,0.81,0.7,0.81,0.97,0.93,0.89,0.8,0.75,0.79,0.87,1.03],"timestamp":"2026-05-20T09:23:39.671Z"}</div>
 
     <!-- Drucken -->
     <div class="card no-print">

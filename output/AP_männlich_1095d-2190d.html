@@ -213,6 +213,36 @@
   </style>
 </head>
 <body>
+<div id="pw-overlay" style="position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.88);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:white;border-radius:12px;padding:36px 40px;max-width:360px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.45);text-align:center;">
+    <div style="background:#1e3a5f;color:white;border-radius:8px;padding:14px 20px;margin-bottom:24px;">
+      <div style="font-size:1.15rem;font-weight:700;">Hoffmann Referenzanalyse</div>
+      <div style="font-size:.8rem;opacity:.7;margin-top:3px;">Fenner Heidrich Limbach</div>
+    </div>
+    <input id="pw-input" type="password" placeholder="Passwort" autocomplete="current-password" style="width:100%;padding:10px 14px;border:1px solid #cbd5e0;border-radius:6px;font-size:.95rem;outline:none;margin-bottom:10px;box-sizing:border-box;">
+    <div id="pw-error" style="color:#dc2626;font-size:.82rem;min-height:18px;margin-bottom:8px;"></div>
+    <button onclick="checkPw()" style="width:100%;padding:10px;background:#1e3a5f;color:white;border:none;border-radius:6px;font-size:.95rem;font-weight:600;cursor:pointer;">Anmelden</button>
+  </div>
+</div>
+<script>
+(function(){
+  if(sessionStorage.getItem('hoffmann_auth')==='1'){
+    document.getElementById('pw-overlay').style.display='none';return;
+  }
+  document.getElementById('pw-input').addEventListener('keydown',function(e){if(e.key==='Enter')checkPw();});
+  setTimeout(function(){document.getElementById('pw-input').focus();},100);
+})();
+function checkPw(){
+  if(document.getElementById('pw-input').value==='hoffmann4fenner'){
+    sessionStorage.setItem('hoffmann_auth','1');
+    document.getElementById('pw-overlay').style.display='none';
+  }else{
+    document.getElementById('pw-error').textContent='Falsches Passwort.';
+    document.getElementById('pw-input').value='';
+    document.getElementById('pw-input').focus();
+  }
+}
+</script>
 <div class="container">
 
   <header>
@@ -259,7 +289,7 @@ oder eine Zahl pro Zeile"></textarea>
         <div>
           <div style="font-size:1.2rem; font-weight:700;" id="printTitle">Alkalische Phosphatase (AP) — männlich, 3 Jahre – 6 Jahre (U/l)</div>
           <div style="color:#6b7280; font-size:.82rem; margin-top:3px;" id="printFilter">Gruppe: männlich, 3 Jahre – 6 Jahre</div>
-          <div style="color:#6b7280; font-size:.82rem; margin-top:1px;" id="printMeta">Erstellt am 6.5.2026, 22:29:08 · n = 338 Messwerte</div>
+          <div style="color:#6b7280; font-size:.82rem; margin-top:1px;" id="printMeta">Erstellt am 20.5.2026, 11:21:07 · n = 338 Messwerte</div>
         </div>
         <div style="text-align:right; font-size:.78rem; color:#6b7280;">
           Methode: Hoffmann-Verfahren (1963)<br>
@@ -365,7 +395,7 @@ oder eine Zahl pro Zeile"></textarea>
     </div>
 
     <!-- Originaldaten (versteckt, für Reproduzierbarkeit im gespeicherten HTML) -->
-    <div id="originalData" style="display:none;">{"name":"Alkalische Phosphatase (AP) — männlich, 3 Jahre – 6 Jahre","unit":"U/l","log":true,"values":[205.5,398,182.5,249.7,223.5,222.2,279.6,206.2,276.3,219,260.1,690.8,189.8,158.9,255.8,253.4,256.7,222.2,198.3,229.2,1831,139.3,304.5,213.8,656.6,166.7,180.3,93.7,316.8,180,363,237,149.3,244,157,216.3,269,239.1,247.7,210.2,217.8,219.4,181.5,215.6,327.4,204.7,146.7,353.6,256.1,240,212.7,191.2,235.4,261.8,250.7,194.4,182.1,187.9,163,300.5,228,309.9,263.3,116.8,250.5,148.4,165.6,295.5,241.9,273.5,225.7,418.5,185.3,260,292.5,237.4,346.1,239.9,299.5,171,213.7,168.1,241.2,182.4,203.9,207.1,282.8,685.8,337.8,384,191.6,296.5,204.1,239,243,290,205.2,198.7,260.7,167.3,114.7,138,203.6,340.7,280.3,284,360.3,222.5,124.2,172.7,255.4,251.5,249.1,361.7,94.2,272.2,308.6,300.9,223.2,326.8,249.9,358.6,290.1,259.8,201.6,201.7,293.9,307.8,299.8,163.9,277.9,185.7,295,321.4,312.9,213.6,260.7,207.5,176,416.1,366.5,270.7,305,238.4,319.9,171,201,303.3,348.7,286.8,214.4,639.2,318.3,273.8,215.6,123,92.1,205.7,352.3,226.5,221.7,195.7,242.9,151,309.8,398.6,297.6,240,209.2,298.7,191.2,302,407.2,225.4,249.6,263.7,176.6,248.7,266.2,261.7,253.6,375,250.3,182.2,731.5,188.5,123.5,222.9,270.1,183.4,172.3,270,158.1,188.4,130.8,243.9,116.2,384.1,332.8,278.9,199.4,220.3,253,187,299.9,288.6,307.8,256.8,161.4,473.3,168.3,316.9,517.2,490.6,478,249.4,322.2,191,202,171.1,242.4,180.9,348.8,226.6,259.4,183.7,246.9,302.3,275.4,231.2,216.2,188.1,236.8,262.9,186.5,210.4,198.6,276.8,288.3,202.4,248.6,257.9,218.7,301.5,264,433.1,240,188,427.5,265.1,200.9,435.5,174.5,432.7,223.6,341.5,84.1,255.3,228,251.2,209.5,220.6,234.2,301.4,241.7,241.9,256.4,288.2,98,258.5,274.2,264.2,293.1,212.2,67.8,359.3,211.4,142.7,287.4,230.8,252.7,168.1,215,290.7,165.8,221.3,262.6,282.4,301.4,171.6,293.3,245.3,252,269.4,157,169.4,328.3,240.3,230.7,362.2,192,138.2,188.2,253.8,144.3,230.8,254,145.6,242.8,202,373.5,161.8,221.4,230.4,291.4,274,276.1,261.1,215.4,272.5,212.6,284.5,190.6,368.1,262.8,205.6,199.3,333.1,261.9,178.8,265.1,211.9,258,210.1,240.1,362,174.5,238.1],"timestamp":"2026-05-06T20:29:08.602Z"}</div>
+    <div id="originalData" style="display:none;">{"name":"Alkalische Phosphatase (AP) — männlich, 3 Jahre – 6 Jahre","unit":"U/l","log":true,"values":[205.5,398,182.5,249.7,223.5,222.2,279.6,206.2,276.3,219,260.1,690.8,189.8,158.9,255.8,253.4,256.7,222.2,198.3,229.2,1831,139.3,304.5,213.8,656.6,166.7,180.3,93.7,316.8,180,363,237,149.3,244,157,216.3,269,239.1,247.7,210.2,217.8,219.4,181.5,215.6,327.4,204.7,146.7,353.6,256.1,240,212.7,191.2,235.4,261.8,250.7,194.4,182.1,187.9,163,300.5,228,309.9,263.3,116.8,250.5,148.4,165.6,295.5,241.9,273.5,225.7,418.5,185.3,260,292.5,237.4,346.1,239.9,299.5,171,213.7,168.1,241.2,182.4,203.9,207.1,282.8,685.8,337.8,384,191.6,296.5,204.1,239,243,290,205.2,198.7,260.7,167.3,114.7,138,203.6,340.7,280.3,284,360.3,222.5,124.2,172.7,255.4,251.5,249.1,361.7,94.2,272.2,308.6,300.9,223.2,326.8,249.9,358.6,290.1,259.8,201.6,201.7,293.9,307.8,299.8,163.9,277.9,185.7,295,321.4,312.9,213.6,260.7,207.5,176,416.1,366.5,270.7,305,238.4,319.9,171,201,303.3,348.7,286.8,214.4,639.2,318.3,273.8,215.6,123,92.1,205.7,352.3,226.5,221.7,195.7,242.9,151,309.8,398.6,297.6,240,209.2,298.7,191.2,302,407.2,225.4,249.6,263.7,176.6,248.7,266.2,261.7,253.6,375,250.3,182.2,731.5,188.5,123.5,222.9,270.1,183.4,172.3,270,158.1,188.4,130.8,243.9,116.2,384.1,332.8,278.9,199.4,220.3,253,187,299.9,288.6,307.8,256.8,161.4,473.3,168.3,316.9,517.2,490.6,478,249.4,322.2,191,202,171.1,242.4,180.9,348.8,226.6,259.4,183.7,246.9,302.3,275.4,231.2,216.2,188.1,236.8,262.9,186.5,210.4,198.6,276.8,288.3,202.4,248.6,257.9,218.7,301.5,264,433.1,240,188,427.5,265.1,200.9,435.5,174.5,432.7,223.6,341.5,84.1,255.3,228,251.2,209.5,220.6,234.2,301.4,241.7,241.9,256.4,288.2,98,258.5,274.2,264.2,293.1,212.2,67.8,359.3,211.4,142.7,287.4,230.8,252.7,168.1,215,290.7,165.8,221.3,262.6,282.4,301.4,171.6,293.3,245.3,252,269.4,157,169.4,328.3,240.3,230.7,362.2,192,138.2,188.2,253.8,144.3,230.8,254,145.6,242.8,202,373.5,161.8,221.4,230.4,291.4,274,276.1,261.1,215.4,272.5,212.6,284.5,190.6,368.1,262.8,205.6,199.3,333.1,261.9,178.8,265.1,211.9,258,210.1,240.1,362,174.5,238.1],"timestamp":"2026-05-20T09:21:07.497Z"}</div>
 
     <!-- Drucken -->
     <div class="card no-print">

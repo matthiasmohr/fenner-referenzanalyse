@@ -213,6 +213,36 @@
   </style>
 </head>
 <body>
+<div id="pw-overlay" style="position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.88);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:white;border-radius:12px;padding:36px 40px;max-width:360px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.45);text-align:center;">
+    <div style="background:#1e3a5f;color:white;border-radius:8px;padding:14px 20px;margin-bottom:24px;">
+      <div style="font-size:1.15rem;font-weight:700;">Hoffmann Referenzanalyse</div>
+      <div style="font-size:.8rem;opacity:.7;margin-top:3px;">Fenner Heidrich Limbach</div>
+    </div>
+    <input id="pw-input" type="password" placeholder="Passwort" autocomplete="current-password" style="width:100%;padding:10px 14px;border:1px solid #cbd5e0;border-radius:6px;font-size:.95rem;outline:none;margin-bottom:10px;box-sizing:border-box;">
+    <div id="pw-error" style="color:#dc2626;font-size:.82rem;min-height:18px;margin-bottom:8px;"></div>
+    <button onclick="checkPw()" style="width:100%;padding:10px;background:#1e3a5f;color:white;border:none;border-radius:6px;font-size:.95rem;font-weight:600;cursor:pointer;">Anmelden</button>
+  </div>
+</div>
+<script>
+(function(){
+  if(sessionStorage.getItem('hoffmann_auth')==='1'){
+    document.getElementById('pw-overlay').style.display='none';return;
+  }
+  document.getElementById('pw-input').addEventListener('keydown',function(e){if(e.key==='Enter')checkPw();});
+  setTimeout(function(){document.getElementById('pw-input').focus();},100);
+})();
+function checkPw(){
+  if(document.getElementById('pw-input').value==='hoffmann4fenner'){
+    sessionStorage.setItem('hoffmann_auth','1');
+    document.getElementById('pw-overlay').style.display='none';
+  }else{
+    document.getElementById('pw-error').textContent='Falsches Passwort.';
+    document.getElementById('pw-input').value='';
+    document.getElementById('pw-input').focus();
+  }
+}
+</script>
 <div class="container">
 
   <header>
@@ -259,7 +289,7 @@ oder eine Zahl pro Zeile"></textarea>
         <div>
           <div style="font-size:1.2rem; font-weight:700;" id="printTitle">CK gesamt (CK) — männlich, 9 Jahre – 14 Jahre (U/l)</div>
           <div style="color:#6b7280; font-size:.82rem; margin-top:3px;" id="printFilter">Gruppe: männlich, 9 Jahre – 14 Jahre</div>
-          <div style="color:#6b7280; font-size:.82rem; margin-top:1px;" id="printMeta">Erstellt am 6.5.2026, 22:29:46 · n = 335 Messwerte</div>
+          <div style="color:#6b7280; font-size:.82rem; margin-top:1px;" id="printMeta">Erstellt am 20.5.2026, 11:21:46 · n = 335 Messwerte</div>
         </div>
         <div style="text-align:right; font-size:.78rem; color:#6b7280;">
           Methode: Hoffmann-Verfahren (1963)<br>
@@ -365,7 +395,7 @@ oder eine Zahl pro Zeile"></textarea>
     </div>
 
     <!-- Originaldaten (versteckt, für Reproduzierbarkeit im gespeicherten HTML) -->
-    <div id="originalData" style="display:none;">{"name":"CK gesamt (CK) — männlich, 9 Jahre – 14 Jahre","unit":"U/l","log":true,"values":[144,74,85,63,114,81,103,138,100,794,119,123,174,99,157,72,142,91,111,140,226,111,791,204,143,84,117,174,652,77,209,81,93,51,221,138,284,101,74,11,59,98,257,99,267,151,9761,213,13565,9667,67,53,3110,95,110,90,134,52,118,20,18,113,131,89,50,113,91,75,114,42,781,77,47,158,90,81,129,190,130,134,92,227,79,327,120,218,114,138,97,43,47,117,131,148,138,105,79,189,145,92,116,139,97,140,75,55,59,447,109,113,317,127,129,287,150,110,194,108,67,65,89,65,52,84,58,205,147,246,207,118,64,59,135,88,141,87,77,69,43,78,182,171,210,126,53,97,318,182,90,208,154,104,121,136,344,88,351,161,159,152,78,94,169,150,430,114,111,155,202,319,76,87,151,127,98,48,174,84,184,60,411,117,88,110,95,53,154,70,84,64,90,1770,214,80,64,147,25,215,115,74,125,96,134,102,69,169,122,73,94,66,101,67,215,283,230,68,84,111,101,187,88,125,109,78,274,237,56,76,130,127,140,109,565,63,59,169,121,85,135,86,83,93,129,109,107,105,93,89,107,150,82,39,56,239,130,82,194,66,85,68,55,111,72,86,136,94,126,217,51,83,61,106,217,144,68,101,141,104,160,307,130,150,136,73,12,235,97,150,147,138,132,96,123,182,120,82,78,116,111,87,106,117,170,85,97,267,175,143,57,157,139,78,81,159,169,202,242,95,101,120,95,89,78,259,177,160,277,200,152,88,206,137,143,109,127],"timestamp":"2026-05-06T20:29:46.090Z"}</div>
+    <div id="originalData" style="display:none;">{"name":"CK gesamt (CK) — männlich, 9 Jahre – 14 Jahre","unit":"U/l","log":true,"values":[144,74,85,63,114,81,103,138,100,794,119,123,174,99,157,72,142,91,111,140,226,111,791,204,143,84,117,174,652,77,209,81,93,51,221,138,284,101,74,11,59,98,257,99,267,151,9761,213,13565,9667,67,53,3110,95,110,90,134,52,118,20,18,113,131,89,50,113,91,75,114,42,781,77,47,158,90,81,129,190,130,134,92,227,79,327,120,218,114,138,97,43,47,117,131,148,138,105,79,189,145,92,116,139,97,140,75,55,59,447,109,113,317,127,129,287,150,110,194,108,67,65,89,65,52,84,58,205,147,246,207,118,64,59,135,88,141,87,77,69,43,78,182,171,210,126,53,97,318,182,90,208,154,104,121,136,344,88,351,161,159,152,78,94,169,150,430,114,111,155,202,319,76,87,151,127,98,48,174,84,184,60,411,117,88,110,95,53,154,70,84,64,90,1770,214,80,64,147,25,215,115,74,125,96,134,102,69,169,122,73,94,66,101,67,215,283,230,68,84,111,101,187,88,125,109,78,274,237,56,76,130,127,140,109,565,63,59,169,121,85,135,86,83,93,129,109,107,105,93,89,107,150,82,39,56,239,130,82,194,66,85,68,55,111,72,86,136,94,126,217,51,83,61,106,217,144,68,101,141,104,160,307,130,150,136,73,12,235,97,150,147,138,132,96,123,182,120,82,78,116,111,87,106,117,170,85,97,267,175,143,57,157,139,78,81,159,169,202,242,95,101,120,95,89,78,259,177,160,277,200,152,88,206,137,143,109,127],"timestamp":"2026-05-20T09:21:46.185Z"}</div>
 
     <!-- Drucken -->
     <div class="card no-print">

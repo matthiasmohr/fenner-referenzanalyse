@@ -213,6 +213,36 @@
   </style>
 </head>
 <body>
+<div id="pw-overlay" style="position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.88);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:white;border-radius:12px;padding:36px 40px;max-width:360px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.45);text-align:center;">
+    <div style="background:#1e3a5f;color:white;border-radius:8px;padding:14px 20px;margin-bottom:24px;">
+      <div style="font-size:1.15rem;font-weight:700;">Hoffmann Referenzanalyse</div>
+      <div style="font-size:.8rem;opacity:.7;margin-top:3px;">Fenner Heidrich Limbach</div>
+    </div>
+    <input id="pw-input" type="password" placeholder="Passwort" autocomplete="current-password" style="width:100%;padding:10px 14px;border:1px solid #cbd5e0;border-radius:6px;font-size:.95rem;outline:none;margin-bottom:10px;box-sizing:border-box;">
+    <div id="pw-error" style="color:#dc2626;font-size:.82rem;min-height:18px;margin-bottom:8px;"></div>
+    <button onclick="checkPw()" style="width:100%;padding:10px;background:#1e3a5f;color:white;border:none;border-radius:6px;font-size:.95rem;font-weight:600;cursor:pointer;">Anmelden</button>
+  </div>
+</div>
+<script>
+(function(){
+  if(sessionStorage.getItem('hoffmann_auth')==='1'){
+    document.getElementById('pw-overlay').style.display='none';return;
+  }
+  document.getElementById('pw-input').addEventListener('keydown',function(e){if(e.key==='Enter')checkPw();});
+  setTimeout(function(){document.getElementById('pw-input').focus();},100);
+})();
+function checkPw(){
+  if(document.getElementById('pw-input').value==='hoffmann4fenner'){
+    sessionStorage.setItem('hoffmann_auth','1');
+    document.getElementById('pw-overlay').style.display='none';
+  }else{
+    document.getElementById('pw-error').textContent='Falsches Passwort.';
+    document.getElementById('pw-input').value='';
+    document.getElementById('pw-input').focus();
+  }
+}
+</script>
 <div class="container">
 
   <header>
@@ -259,7 +289,7 @@ oder eine Zahl pro Zeile"></textarea>
         <div>
           <div style="font-size:1.2rem; font-weight:700;" id="printTitle">Transferrin (TRAF) — weiblich, 10 Jahre – 15 Jahre (g/l)</div>
           <div style="color:#6b7280; font-size:.82rem; margin-top:3px;" id="printFilter">Gruppe: weiblich, 10 Jahre – 15 Jahre</div>
-          <div style="color:#6b7280; font-size:.82rem; margin-top:1px;" id="printMeta">Erstellt am 6.5.2026, 22:32:10 · n = 139 Messwerte</div>
+          <div style="color:#6b7280; font-size:.82rem; margin-top:1px;" id="printMeta">Erstellt am 20.5.2026, 11:24:23 · n = 139 Messwerte</div>
         </div>
         <div style="text-align:right; font-size:.78rem; color:#6b7280;">
           Methode: Hoffmann-Verfahren (1963)<br>
@@ -365,7 +395,7 @@ oder eine Zahl pro Zeile"></textarea>
     </div>
 
     <!-- Originaldaten (versteckt, für Reproduzierbarkeit im gespeicherten HTML) -->
-    <div id="originalData" style="display:none;">{"name":"Transferrin (TRAF) — weiblich, 10 Jahre – 15 Jahre","unit":"g/l","log":false,"values":[4.09,3.02,2.73,2.98,2.42,2.27,2.58,2.12,2.43,2.24,2.98,2.85,2.47,3.29,3.24,2.16,2.22,3.32,2.33,2.68,2.64,3.14,2.34,2.95,2.34,2.99,2.61,2.53,3.07,2.46,3.02,3.59,2.47,3.01,3.05,2.46,3.14,3.57,2.43,3.54,2.58,3.21,2.08,2.39,2.62,3.29,2.93,2.74,2.19,2.4,2.42,3.57,3.09,2.65,2.26,2.04,3.36,2.77,2.44,3.14,3.69,3.4,2.78,2.66,3.2,3.06,2.5,2.59,2.99,3.43,3.14,4.14,3.09,2.5,2.78,2.65,2.98,2.83,2.65,2.56,3.05,3.39,4.2,2.09,3.48,2.91,4.48,2.84,3.58,3.97,2.85,2.9,3.06,3.25,3.33,3.22,3.32,2.76,3.64,2.63,3.08,2.46,3.54,2.93,3.07,2.91,3.12,2.92,2.66,3.77,2.62,4.22,2.27,3.08,2.17,2.48,1.6,1.87,1.97,2.6,2.87,3.48,3.24,3.43,2.55,3.76,2.65,2.8,3.49,1.95,2.63,2.88,2.46,2.9,2.94,3.43,3.2,2.65,3.04],"timestamp":"2026-05-06T20:32:10.732Z"}</div>
+    <div id="originalData" style="display:none;">{"name":"Transferrin (TRAF) — weiblich, 10 Jahre – 15 Jahre","unit":"g/l","log":false,"values":[4.09,3.02,2.73,2.98,2.42,2.27,2.58,2.12,2.43,2.24,2.98,2.85,2.47,3.29,3.24,2.16,2.22,3.32,2.33,2.68,2.64,3.14,2.34,2.95,2.34,2.99,2.61,2.53,3.07,2.46,3.02,3.59,2.47,3.01,3.05,2.46,3.14,3.57,2.43,3.54,2.58,3.21,2.08,2.39,2.62,3.29,2.93,2.74,2.19,2.4,2.42,3.57,3.09,2.65,2.26,2.04,3.36,2.77,2.44,3.14,3.69,3.4,2.78,2.66,3.2,3.06,2.5,2.59,2.99,3.43,3.14,4.14,3.09,2.5,2.78,2.65,2.98,2.83,2.65,2.56,3.05,3.39,4.2,2.09,3.48,2.91,4.48,2.84,3.58,3.97,2.85,2.9,3.06,3.25,3.33,3.22,3.32,2.76,3.64,2.63,3.08,2.46,3.54,2.93,3.07,2.91,3.12,2.92,2.66,3.77,2.62,4.22,2.27,3.08,2.17,2.48,1.6,1.87,1.97,2.6,2.87,3.48,3.24,3.43,2.55,3.76,2.65,2.8,3.49,1.95,2.63,2.88,2.46,2.9,2.94,3.43,3.2,2.65,3.04],"timestamp":"2026-05-20T09:24:23.461Z"}</div>
 
     <!-- Drucken -->
     <div class="card no-print">

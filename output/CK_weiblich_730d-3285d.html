@@ -213,6 +213,36 @@
   </style>
 </head>
 <body>
+<div id="pw-overlay" style="position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.88);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:white;border-radius:12px;padding:36px 40px;max-width:360px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.45);text-align:center;">
+    <div style="background:#1e3a5f;color:white;border-radius:8px;padding:14px 20px;margin-bottom:24px;">
+      <div style="font-size:1.15rem;font-weight:700;">Hoffmann Referenzanalyse</div>
+      <div style="font-size:.8rem;opacity:.7;margin-top:3px;">Fenner Heidrich Limbach</div>
+    </div>
+    <input id="pw-input" type="password" placeholder="Passwort" autocomplete="current-password" style="width:100%;padding:10px 14px;border:1px solid #cbd5e0;border-radius:6px;font-size:.95rem;outline:none;margin-bottom:10px;box-sizing:border-box;">
+    <div id="pw-error" style="color:#dc2626;font-size:.82rem;min-height:18px;margin-bottom:8px;"></div>
+    <button onclick="checkPw()" style="width:100%;padding:10px;background:#1e3a5f;color:white;border:none;border-radius:6px;font-size:.95rem;font-weight:600;cursor:pointer;">Anmelden</button>
+  </div>
+</div>
+<script>
+(function(){
+  if(sessionStorage.getItem('hoffmann_auth')==='1'){
+    document.getElementById('pw-overlay').style.display='none';return;
+  }
+  document.getElementById('pw-input').addEventListener('keydown',function(e){if(e.key==='Enter')checkPw();});
+  setTimeout(function(){document.getElementById('pw-input').focus();},100);
+})();
+function checkPw(){
+  if(document.getElementById('pw-input').value==='hoffmann4fenner'){
+    sessionStorage.setItem('hoffmann_auth','1');
+    document.getElementById('pw-overlay').style.display='none';
+  }else{
+    document.getElementById('pw-error').textContent='Falsches Passwort.';
+    document.getElementById('pw-input').value='';
+    document.getElementById('pw-input').focus();
+  }
+}
+</script>
 <div class="container">
 
   <header>
@@ -259,7 +289,7 @@ oder eine Zahl pro Zeile"></textarea>
         <div>
           <div style="font-size:1.2rem; font-weight:700;" id="printTitle">CK gesamt (CK) — weiblich, 2 Jahre – 9 Jahre (U/l)</div>
           <div style="color:#6b7280; font-size:.82rem; margin-top:3px;" id="printFilter">Gruppe: weiblich, 2 Jahre – 9 Jahre</div>
-          <div style="color:#6b7280; font-size:.82rem; margin-top:1px;" id="printMeta">Erstellt am 6.5.2026, 22:29:44 · n = 252 Messwerte</div>
+          <div style="color:#6b7280; font-size:.82rem; margin-top:1px;" id="printMeta">Erstellt am 20.5.2026, 11:21:44 · n = 252 Messwerte</div>
         </div>
         <div style="text-align:right; font-size:.78rem; color:#6b7280;">
           Methode: Hoffmann-Verfahren (1963)<br>
@@ -365,7 +395,7 @@ oder eine Zahl pro Zeile"></textarea>
     </div>
 
     <!-- Originaldaten (versteckt, für Reproduzierbarkeit im gespeicherten HTML) -->
-    <div id="originalData" style="display:none;">{"name":"CK gesamt (CK) — weiblich, 2 Jahre – 9 Jahre","unit":"U/l","log":true,"values":[159,106,66,124,104,84,141,92,446,100,767,70,97,391,1268,115,106,90,1795,492,454,112,58,46,54,106,77,56,92,96,54,139,88,86,235,3092,2648,64,70,83,129,35,85,88,9,1349,993,109,71,96,78,938,132,87,90,17,98,24,109,144,19,48,112,116,118,111,56,174,113,138,181,44,236,287,284,59,104,76,33,62,61,228,146,37,146,90,121,41,87,59,45,112,38,88,1124,108,58,122,67,79,38,237,112,78,145,120,72,171,175,42,96,209,384,45,81,148,95,87,109,143,72,20,21,17,147,57,15,141,192,56,141,234,210,216,154,120,74,68,137,108,197,204,98,147,50,126,106,58,151,130,234,103,184,102,222,128,32,78,23,74,72,78,87,72,112,64,146,64,130,46,120,154,62,97,158,71,173,60,27,66,69,123,184,75,113,113,83,121,77,53,77,112,158,219,81,100,100,101,161,172,99,78,63,101,144,106,110,85,66,104,3583,203,142,140,139,60,114,81,133,51,189,54,128,97,78,74,124,169,100,92,81,1889,173,131,1164,505,118,106,298,118,84,146,109,767,122,99,5,140,87,232,149,183],"timestamp":"2026-05-06T20:29:44.309Z"}</div>
+    <div id="originalData" style="display:none;">{"name":"CK gesamt (CK) — weiblich, 2 Jahre – 9 Jahre","unit":"U/l","log":true,"values":[159,106,66,124,104,84,141,92,446,100,767,70,97,391,1268,115,106,90,1795,492,454,112,58,46,54,106,77,56,92,96,54,139,88,86,235,3092,2648,64,70,83,129,35,85,88,9,1349,993,109,71,96,78,938,132,87,90,17,98,24,109,144,19,48,112,116,118,111,56,174,113,138,181,44,236,287,284,59,104,76,33,62,61,228,146,37,146,90,121,41,87,59,45,112,38,88,1124,108,58,122,67,79,38,237,112,78,145,120,72,171,175,42,96,209,384,45,81,148,95,87,109,143,72,20,21,17,147,57,15,141,192,56,141,234,210,216,154,120,74,68,137,108,197,204,98,147,50,126,106,58,151,130,234,103,184,102,222,128,32,78,23,74,72,78,87,72,112,64,146,64,130,46,120,154,62,97,158,71,173,60,27,66,69,123,184,75,113,113,83,121,77,53,77,112,158,219,81,100,100,101,161,172,99,78,63,101,144,106,110,85,66,104,3583,203,142,140,139,60,114,81,133,51,189,54,128,97,78,74,124,169,100,92,81,1889,173,131,1164,505,118,106,298,118,84,146,109,767,122,99,5,140,87,232,149,183],"timestamp":"2026-05-20T09:21:44.377Z"}</div>
 
     <!-- Drucken -->
     <div class="card no-print">
